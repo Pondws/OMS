@@ -20,12 +20,27 @@ enum Role {
 }
 
 model User {
-  id       String  @id @default(uuid()) @db.Uuid
-  email    String  @unique
-  password String
-  name     String?
-  role     Role    @default(STAFF)
+  id            String         @id @default(uuid()) @db.Uuid
+  email         String         @unique
+  password      String
+  name          String?
+  role          Role           @default(STAFF)
+  refreshTokens RefreshToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String @id @default(uuid()) @db.Uuid
+  tokenHash String @unique
+  userId    String @db.Uuid
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

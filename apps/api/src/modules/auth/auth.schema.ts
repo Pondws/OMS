@@ -9,17 +9,10 @@ const authSchema = {
   login: z.object({
     email: z.string(),
     password: z.string()
+  }),
+  refresh: z.object({
+    refreshToken: z.string().min(1)
   })
 }
 
 export default authSchema
-
-export type User = {
-  id: string
-  email: string
-  password: string
-  name?: string
-  role?: 'SUPER_ADMIN' | 'ADMIN' | 'STAFF'
-  createdAt?: Date
-  updatedAt?: Date
-}
