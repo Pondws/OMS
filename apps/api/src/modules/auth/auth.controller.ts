@@ -11,7 +11,7 @@ const AuthController = {
       res.status(200).json({ message: "สมัครสมาชิกเรียบร้อย" })
     } catch (error) {
       res.status(400).json({
-        message: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด'
+        message: 'เกิดข้อผิดพลาด'
       })
     }
   },
@@ -35,7 +35,7 @@ const AuthController = {
         })
     } catch (error) {
       res.status(400).json({
-        message: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด'
+        message: 'เกิดข้อผิดพลาด'
       })
     }
   },
@@ -45,7 +45,7 @@ const AuthController = {
       return res.status(200).json(result)
     } catch (error) {
       res.status(400).json({
-        message: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด'
+        message: 'เกิดข้อผิดพลาด'
       })
     }
   },
