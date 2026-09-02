@@ -1,6 +1,6 @@
 import {
   Box,
-  Inbox,
+  Layers,
   LayoutGrid,
   Package,
   Tag,
@@ -40,19 +40,13 @@ export const LAYOUT_OPTIONS = [
             url: "/product-tag",
             icon: Tag,
           },
-          // {
-          //   id: "product-category",
-          //   title: "Product Category",
-          //   url: "/product-category",
-          //   icon: Layers,
-          // },
+          {
+            id: "product-category",
+            title: "หมวดหมู่สินค้า",
+            url: "/product-category",
+            icon: Layers,
+          },
         ]
-      },
-      {
-        id: "post",
-        title: "Post",
-        url: "/post",
-        icon: Inbox,
       },
       // {
       //   id: "blog",

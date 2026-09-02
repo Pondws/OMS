@@ -5,6 +5,10 @@ const axiosBase = axios.create({
   withCredentials: true
 })
 
+// axiosBase.interceptors.request.use((config) => {
+//   const token = lo
+// })
+
 export {
   axiosBase as axios
 }

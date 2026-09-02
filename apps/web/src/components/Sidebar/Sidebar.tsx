@@ -44,18 +44,16 @@ import {
 import { LAYOUT_OPTIONS } from "consts"
 import Link from "next/link"
 import { useSelectedLayoutSegment } from 'next/navigation'
-import { useAuth } from 'hooks'
 
 export function Sidebar() {
   const { isMobile } = useSidebar()
-  const { logout } = useAuth()
   const segment = useSelectedLayoutSegment()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
 
-  const toggleMenu = (menuId: string) => {
+  const handleMenuOpenChange = (menuId: string, open: boolean) => {
     setOpenMenus((prev) => ({
       ...prev,
-      [menuId]: !prev[menuId]
+      [menuId]: open,
     }))
   }
 
@@ -85,7 +83,8 @@ export function Sidebar() {
               <SidebarMenu>
                 {item.menus.map((menu) => {
                   const isParentActive = menu.id === segment || menu.items?.some((m) => m.id === segment);
-                  const isOpen = openMenus[menu.id] ?? isParentActive
+                  // const isOpen = openMenus[menu.id] ?? isParentActive
+                  const isOpen = openMenus[menu.id] === true
 
                   return (
                     <Collapsible
@@ -93,7 +92,7 @@ export function Sidebar() {
                       render={<SidebarMenuItem />}
                       className="group/collapsible"
                       open={isOpen}
-                      onOpenChange={() => toggleMenu(menu.id)}
+                      onOpenChange={(open) => handleMenuOpenChange(menu.id, open)}
                     >
                       {menu.items?.length ? (
                         <>
@@ -216,42 +215,42 @@ export function Sidebar() {
                 align="end"
                 sideOffset={isMobile ? 4 : 16}
               >
-                <DropdownMenuLabel className="p-0 font-normal">
-                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                    <Avatar className="h-8 w-8 rounded-lg">
-                      <AvatarFallback className="rounded-lg">
-                        CN
-                      </AvatarFallback>
-                    </Avatar>
-
-                    <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-medium">
-                        test
-                      </span>
-                    </div>
-                  </div>
-                </DropdownMenuLabel>
-
                 <DropdownMenuGroup>
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <Avatar className="h-8 w-8 rounded-lg">
+                        <AvatarFallback className="rounded-lg">
+                          CN
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-medium">
+                          test
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+
                   <DropdownMenuItem
                     render={<Link href="/setting" />}
                   >
                     <Settings />
                     Setting
                   </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem>
+                    <LogOut />
+                    Log out
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem onClick={logout}>
-                  <LogOut />
-                  Log out
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-    </SidebarBase >
+    </SidebarBase>
   )
 }

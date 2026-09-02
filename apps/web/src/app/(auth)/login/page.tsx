@@ -12,11 +12,11 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { toast } from 'sonner'
 import { handleError } from "utils"
-import { useAuth } from "hooks"
+import { authApi } from "apis"
 
 const defaultValues = {
   email: '',
@@ -30,7 +30,7 @@ const schema = z.object({
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login } = useAuth()
+  const queryClient = useQueryClient()
 
   const {
     register,
@@ -42,8 +42,14 @@ export default function LoginPage() {
   })
 
   const handleLogin = useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string; }) => login(email, password),
-    onSuccess: () => router.push('/dashboard'),
+    mutationFn: authApi.login,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["auth", "me"],
+      })
+
+      router.replace("/dashboard")
+    },
     onError: (error) => {
       toast.error(handleError(error, ''))
     }
