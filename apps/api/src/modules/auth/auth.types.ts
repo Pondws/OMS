@@ -8,7 +8,7 @@ export type Role =
   | "VIEWER"
 
 export type AuthUser = {
-  id: number
+  id: string
   email: string
   role: Role
 }

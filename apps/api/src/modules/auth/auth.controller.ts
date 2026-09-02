@@ -18,7 +18,21 @@ const AuthController = {
   login: async (req: Request, res: Response) => {
     try {
       const result = await authService.login(req.body)
-      res.status(200).json(result)
+
+      res.cookie("accessToken", result.accessToken, {
+        httpOnly: true,
+        // secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 15 * 60 * 1000
+      })
+
+      return res
+        .status(200)
+        .json({
+          data: {
+            user: result.user
+          }
+        })
     } catch (error) {
       res.status(400).json({
         message: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด'
@@ -47,7 +61,7 @@ const AuthController = {
         message: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด'
       })
     }
-  }
+  },
 }
 
 export default AuthController

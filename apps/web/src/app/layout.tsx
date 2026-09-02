@@ -25,15 +25,15 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <Hydration>
             {/* <GuardProvider> */}
-            {children}
-            <Toaster
-              position="bottom-center"
-              richColors={true}
-            />
+              {children}
+              <Toaster
+                position="bottom-center"
+                richColors={true}
+              />
             {/* </GuardProvider> */}
           </Hydration>
         </QueryClientProvider>
       </body>
-    </html>
+    </html >
   )
 }

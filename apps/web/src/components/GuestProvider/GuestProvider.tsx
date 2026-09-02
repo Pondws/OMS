@@ -1,31 +1,35 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Loading } from "components"
 import { useMe } from "hooks"
 
-export function GuardProvider({ children }: { children: React.ReactNode }) {
+export function GuestProvider({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const router = useRouter()
 
   const {
     data: user,
     isPending,
-    isError
   } = useMe()
 
   useEffect(() => {
-    if (!isPending && isError) {
-      router.replace("/login")
+    if (!isPending && user) {
+      router.replace("/dashboard")
     }
-  }, [isPending, isError, router])
+  }, [user, isPending, router])
 
   if (isPending) {
     return <Loading />
   }
 
-  if (isError || !user) {
+  if (user) {
     return null
   }
+
   return children
 }
