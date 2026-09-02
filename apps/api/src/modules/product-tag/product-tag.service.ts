@@ -14,7 +14,7 @@ const productTagService = {
     })
   },
   findAll: () => {
-
+    return prisma.productTag.findMany()
   },
   findById: (id: string) => {
     return prisma.productTag.findUnique({

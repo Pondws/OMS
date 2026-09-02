@@ -15,7 +15,11 @@ const productTagController = {
   },
   findAll: async (req: Request, res: Response) => {
     try {
+      const productTags = await productTagService.findAll()
 
+      res.json({
+        data: productTags
+      })
     } catch (error) {
       res.status(500).json({
         message: "Internal server error",
@@ -25,7 +29,7 @@ const productTagController = {
   findById: async (req: Request<ProductTagParams>, res: Response) => {
     try {
       const productTag = await productTagService.findById(req.params.id)
-      
+
       if (!productTag) {
         throw new Error("ไม่พบแท็กสินค้า")
       }
