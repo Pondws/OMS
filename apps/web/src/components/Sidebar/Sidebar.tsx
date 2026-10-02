@@ -53,7 +53,7 @@ import {
   useSelectedLayoutSegment
 } from 'next/navigation'
 import { authApi } from 'apis'
-
+import { toast } from 'sonner'
 
 export function Sidebar() {
   const router = useRouter()
@@ -78,6 +78,7 @@ export function Sidebar() {
         null
       )
 
+      toast.success("ออกจากระบบเรียบร้อย")
       router.replace("/login")
     },
   })
