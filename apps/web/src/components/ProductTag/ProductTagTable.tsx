@@ -40,7 +40,6 @@ function ProductTagTableComp() {
     queryFn: () => productTagApi.getAll(defaultVariants)
   })
 
-  console.log('pri data', data)
 
   const rows = data?.data || []
   // const totalRows: number = data?.totalRows || 0
