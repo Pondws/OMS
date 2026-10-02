@@ -3,7 +3,7 @@ import { axios } from 'utils'
 
 export const authApi = {
   login: async (data: AuthType.LoginProps) => {
-    const res = await axios.post('auth/login', data)
+    const res = await axios.post('/auth/login', data)
     return res.data.data
   },
   getMe: async () => {
@@ -11,7 +11,7 @@ export const authApi = {
     return res.data
   },
   logout: async () => {
-    const res = await axios.post('/logout')
-    return res.data.data
+    const res = await axios.post('/auth/logout')
+    return res.data
   }
 }
