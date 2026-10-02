@@ -6,13 +6,13 @@ import {
 } from "./product-tag.type"
 
 const productTagService = {
-  create: (data: CreateProductTag) => {
-    const validated = productTagSchema.create.parse(data)
+  // create: (data: CreateProductTag) => {
+  //   const validated = productTagSchema.create.parse(data)
 
-    return prisma.productTag.create({
-      data: validated
-    })
-  },
+  //   return prisma.productTag.create({
+  //     data: validated
+  //   })
+  // },
   findAll: () => {
     return prisma.productTag.findMany()
   },
@@ -23,16 +23,16 @@ const productTagService = {
       }
     })
   },
-  update: (id: string, data: UpdateProductTag) => {
-    const validated = productTagSchema.update.parse(data)
+  // update: (id: string, data: UpdateProductTag) => {
+  //   const validated = productTagSchema.update.parse(data)
 
-    return prisma.productTag.update({
-      where: {
-        id,
-      },
-      data: validated
-    })
-  },
+  //   return prisma.productTag.update({
+  //     where: {
+  //       id,
+  //     },
+  //     data: validated
+  //   })
+  // },
   delete: (id: string) => {
     return prisma.productTag.delete({
       where: {

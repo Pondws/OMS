@@ -2,20 +2,23 @@ import { ALERT_TEXT } from 'consts'
 import { AlertTextType, ProductTagType } from 'types'
 import { ColumnDef, createColumnHelper } from "@tanstack/react-table"
 import { format } from 'date-fns'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  Button
-} from 'components'
-import { EllipsisVertical, SquarePen, Trash } from "lucide-react"
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+//   Button
+// } from 'components'
+// import { EllipsisVertical, SquarePen, Trash } from "lucide-react"
+import { type DataTableFeatures } from "components"
+
 
 const defaultName = 'แท็กสินค้า'
 const defaultPath = 'product-tag'
 
-// const columnHelper = createColumnHelper<ProductTagType.GetProductTag>()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const columnHelper = createColumnHelper<DataTableFeatures, any>()
 
 export const PRODUCT_TAG = {
   name: defaultName,
@@ -29,6 +32,37 @@ export const PRODUCT_TAG = {
   path: (
     action?: AlertTextType.PathProps
   ) => action ? `/${defaultPath}/${action}` : `/${defaultPath}`,
+  columns: columnHelper.columns([
+    columnHelper.accessor("createdAt", {
+      header: "วันที่สร้าง",
+      cell: info => {
+        const { updatedAt } = info.row.original
+        return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
+      },
+      maxSize: 20
+    }),
+    columnHelper.accessor("updatedAt", {
+      header: "วันที่อัปเดต",
+      cell: info => {
+        const { updatedAt } = info.row.original
+        return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
+      },
+    }),
+    columnHelper.accessor("name", {
+      header: "ชื่อแท็กสินค้า",
+    }),
+  ])
+  // columnHelper.accessor("updatedAt", {
+  //   header: "วันที่แก้ไข",
+  //   cell: info => {
+  //     const { updatedAt } = info.row.original
+  //     return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
+  //   },
+  //   meta: {
+  //     width: 120
+  //   }
+  // }),
+
   // columns: (
   //   action: {
   //     onDelete?: (id: string) => void
@@ -92,4 +126,5 @@ export const PRODUCT_TAG = {
   //       }
   //     })
   //   ] as ColumnDef<ProductTagType.GetProductTag>[]
+
 } 

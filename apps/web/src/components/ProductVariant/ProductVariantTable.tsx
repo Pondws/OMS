@@ -42,12 +42,12 @@ function ProductVariantTableComp() {
   const rows = data?.data || []
   const totalRows = data?.totalRows || 0
 
-  const {
-    mutate,
-  } = useMutation({
-    mutationFn: (id: string) => productVariantApi.deleteByID(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-tag"] })
-  })
+  // const {
+  //   mutate,
+  // } = useMutation({
+  //   mutationFn: (id: string) => productVariantApi.deleteByID(id),
+  //   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-tag"] })
+  // })
 
   return (
     <div className="p-4 overflow-hidden">

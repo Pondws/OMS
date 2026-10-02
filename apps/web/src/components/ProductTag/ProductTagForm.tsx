@@ -22,10 +22,12 @@ import { ArrowLeft, Save } from 'lucide-react'
 
 const defaultValues = {
   name: '',
+  status: "ACTIVE"
 }
 
 const schema = z.object({
   name: z.string().nonempty('Name is required'),
+  status: z.enum(["ACTIVE", "INACTIVE"])
 })
 
 function ProductTagFormComp(props: { id?: string }) {
@@ -66,6 +68,7 @@ function ProductTagFormComp(props: { id?: string }) {
     isPending
   } = useMutation({
     mutationFn: (value: ProductTagType.ProductTagForm) => {
+      console.log('value', value)
       if (id) {
         return productTagApi.update(id, value)
       } else {

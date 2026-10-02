@@ -5,7 +5,8 @@ import {
   // Table,
   Button,
   Header,
-  DatePicker
+  DatePicker,
+  DataTable
 } from "components"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
@@ -26,30 +27,30 @@ function ProductTagTableComp() {
   const queryClient = useQueryClient()
   const height = useTableHeight()
 
-  console.log('height', height)
-
-  const fetchData = async () => {
-    const res = await productTagApi.getAll(defaultVariants)
-    return res
-  }
+  // const fetchData = async () => {
+  //   const res = await productTagApi.getAll(defaultVariants)
+  //   return res.data
+  // }
 
   const {
     data,
     isFetching
   } = useQuery({
     queryKey: ['product-tag'],
-    queryFn: fetchData
+    queryFn: () => productTagApi.getAll(defaultVariants)
   })
+
+  console.log('pri data', data)
 
   const rows = data?.data || []
-  const totalRows: number = data?.totalRows || 0
+  // const totalRows: number = data?.totalRows || 0
 
-  const {
-    mutate,
-  } = useMutation({
-    mutationFn: (id: string) => productTagApi.deleteByID(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-tag"] })
-  })
+  // const {
+  //   mutate,
+  // } = useMutation({
+  //   mutationFn: (id: string) => productTagApi.deleteByID(id),
+  //   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-tag"] })
+  // })
 
   return (
     <div className="p-4 overflow-hidden">
@@ -67,6 +68,11 @@ function ProductTagTableComp() {
         filterBox={
           <DatePicker />
         }
+      />
+
+      <DataTable 
+        columns={PRODUCT_TAG.columns}
+        data={rows}
       />
 
       {/* <Table
