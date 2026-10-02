@@ -4,7 +4,8 @@ import {
   LayoutGrid,
   Package,
   Tag,
-  Puzzle
+  Puzzle,
+  User
 } from "lucide-react"
 
 export const LAYOUT_OPTIONS = [
@@ -47,6 +48,12 @@ export const LAYOUT_OPTIONS = [
             icon: Layers,
           },
         ]
+      },
+            {
+        id: "user",
+        title: "ผู้ใช้งาน",
+        url: "/user",
+        icon: User,
       },
       // {
       //   id: "blog",
