@@ -41,13 +41,25 @@ import {
   Settings,
 } from 'lucide-react'
 
+import {
+  useQueryClient,
+  useMutation
+} from '@tanstack/react-query'
+
 import { LAYOUT_OPTIONS } from "consts"
 import Link from "next/link"
-import { useSelectedLayoutSegment } from 'next/navigation'
+import {
+  useRouter,
+  useSelectedLayoutSegment
+} from 'next/navigation'
+import { authApi } from 'apis'
+
 
 export function Sidebar() {
+  const router = useRouter()
   const { isMobile } = useSidebar()
   const segment = useSelectedLayoutSegment()
+  const queryClient = useQueryClient()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
 
   const handleMenuOpenChange = (menuId: string, open: boolean) => {
@@ -56,6 +68,19 @@ export function Sidebar() {
       [menuId]: open,
     }))
   }
+
+  const handleLogout = useMutation({
+    mutationFn: authApi.logout,
+
+    onSuccess: () => {
+      queryClient.setQueryData(
+        ["auth", "me"],
+        null
+      )
+
+      router.replace("/login")
+    },
+  })
 
   return (
     <SidebarBase collapsible="icon">
@@ -241,7 +266,7 @@ export function Sidebar() {
 
                   <DropdownMenuSeparator />
 
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleLogout.mutate()}>
                     <LogOut />
                     Log out
                   </DropdownMenuItem>
