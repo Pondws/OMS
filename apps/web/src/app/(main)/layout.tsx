@@ -8,7 +8,7 @@ import {
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    // <GuardProvider>
+    <GuardProvider>
       <SidebarProvider>
         <Sidebar />
         <SidebarInset>
@@ -18,6 +18,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           {children}
         </SidebarInset>
       </SidebarProvider>
-    // </GuardProvider>
+    </GuardProvider>
   )
 }
