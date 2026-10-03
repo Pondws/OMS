@@ -1,11 +1,11 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, ReactNode } from "react"
 import { Loading } from "components"
 import { useMe } from "hooks"
 
-export function GuardProvider({ children }: { children: React.ReactNode }) {
+export function GuardProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
 
   const {
@@ -15,10 +15,10 @@ export function GuardProvider({ children }: { children: React.ReactNode }) {
   } = useMe()
 
   useEffect(() => {
-    if (!isPending && isError) {
+    if (!isPending && (isError || !user)) {
       router.replace("/login")
     }
-  }, [isPending, isError, router])
+  }, [isPending, isError, user, router])
 
   if (isPending) {
     return <Loading />
