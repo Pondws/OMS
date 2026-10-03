@@ -1,6 +1,6 @@
 "use client"
 
-import { memo } from "react"
+import { memo, useState } from "react"
 import {
   // Table,
   Button,
@@ -15,20 +15,23 @@ import { PRODUCT_TAG } from "./product-tag.const"
 import { useTableHeight } from "hooks"
 import { Plus } from "lucide-react"
 
-const defaultVariants = {
-  page: 0,
-  limit: 10,
-  startDate: '',
-  endDate: '',
+const defaultValues = {
+  page: 1,
+  limit: 3,
+  // startDate: '',
+  // endDate: '',
 }
 
 function ProductTagTableComp() {
   const router = useRouter()
-  const queryClient = useQueryClient()
-  const height = useTableHeight()
+  // const queryClient = useQueryClient()
+  // const height = useTableHeight()
 
+
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(3)
   // const fetchData = async () => {
-  //   const res = await productTagApi.getAll(defaultVariants)
+  //   const res = await productTagApi.getAll(defaultValues)
   //   return res.data
   // }
 
@@ -36,13 +39,26 @@ function ProductTagTableComp() {
     data,
     isFetching
   } = useQuery({
-    queryKey: ['product-tag'],
-    queryFn: () => productTagApi.getAll(defaultVariants)
+    queryKey: ['product-tag', { page, limit }],
+
+    queryFn: () => productTagApi.getAll({
+      page,
+      limit
+    })
   })
 
+  const rows = data?.data ?? []
+  const total = data?.meta?.total ?? 0
+  const totalPages = data?.meta?.totalPages ?? 0
 
-  const rows = data?.data || []
-  // const totalRows: number = data?.totalRows || 0
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
+  }
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit)
+    setPage(1)
+  }
 
   // const {
   //   mutate,
@@ -69,9 +85,15 @@ function ProductTagTableComp() {
         }
       />
 
-      <DataTable 
+      <DataTable
         columns={PRODUCT_TAG.columns}
         data={rows}
+        page={page}
+        limit={limit}
+        total={total}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        onLimitChange={handleLimitChange}
       />
 
       {/* <Table

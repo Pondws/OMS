@@ -8,7 +8,7 @@ export const productTagApi = {
     const res = await axios.get(PREFIX_PRODUCT_TAG, {
       params
     })
-    return res?.data
+    return res?.data?.data
   },
   create: async (data: ProductTagType.ProductTagForm) => {
     const res = await axios.post(PREFIX_PRODUCT_TAG, data)

@@ -3,8 +3,8 @@ import cors from 'cors'
 import cookieParser from "cookie-parser"
 
 import authRoute from './modules/auth/auth.route'
-import userRoute from './modules/users/user.route'
-import productTagRoute from './modules/product-tags/product-tag.route'
+import userRoute from './modules/user/user.route'
+import productTagRoute from './modules/product-tag/product-tag.route'
 
 const app = express()
 
