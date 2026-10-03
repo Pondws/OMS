@@ -15,19 +15,12 @@ const productTagController = {
   },
   findAll: async (req: Request, res: Response) => {
     try {
-      // const {
-      //   page,
-      //   limit
-      // } = req.query
       const productTags = await productTagService.findAll(req.query)
-
-      console.log("productTags", productTags)
 
       res.json({
         data: productTags
       })
     } catch (error) {
-      console.error('error', error)
       res.status(500).json({
         message: "Internal server error",
       })

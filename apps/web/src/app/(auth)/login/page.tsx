@@ -44,7 +44,6 @@ export default function LoginPage() {
   const handleLogin = useMutation({
     mutationFn: authApi.login,
     onSuccess: async () => {
-      console.log('LOGIN SUCCESS')
       await queryClient.invalidateQueries({
         queryKey: ["auth", "me"],
       })
