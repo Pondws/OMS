@@ -20,15 +20,17 @@ import { toast } from 'sonner'
 import { handleError } from "utils"
 import { ArrowLeft, Save } from 'lucide-react'
 
-const defaultValues = {
-  name: '',
-  status: "ACTIVE"
-}
-
 const schema = z.object({
   name: z.string().nonempty('Name is required'),
   status: z.enum(["ACTIVE", "INACTIVE"])
 })
+
+type FormValues = z.infer<typeof schema>
+
+const defaultValues: FormValues = {
+  name: '',
+  status: "ACTIVE"
+}
 
 function ProductTagFormComp(props: { id?: string }) {
   const { id } = props
@@ -43,7 +45,7 @@ function ProductTagFormComp(props: { id?: string }) {
       isDirty
     },
     reset,
-  } = useForm<z.infer<typeof schema>>({
+  } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues
   })
@@ -68,7 +70,6 @@ function ProductTagFormComp(props: { id?: string }) {
     isPending
   } = useMutation({
     mutationFn: (value: ProductTagType.ProductTagForm) => {
-      console.log('value', value)
       if (id) {
         return productTagApi.update(id, value)
       } else {

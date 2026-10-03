@@ -22,7 +22,7 @@ import { PRODUCT_VARIANT } from './product-variant.const'
 import { toast } from 'sonner'
 import { handleError, Helper } from "utils"
 import { ArrowLeft, CirclePlus, GripVertical, Save, Trash } from 'lucide-react'
-import { STATUS } from '@/consts'
+import { STATUS } from 'consts'
 
 const defaultValues = {
   name: "",
@@ -139,14 +139,14 @@ function ProductVariantFormComp(props: { id?: string }) {
       <form className='flex flex-col gap-4'>
         <CardBody
           title='ข้อมูลตัวเลือกสินค้า'
-          action={
-            <Select
-              color={Helper.handleColorStatus(getValues("status"))}
-              option={STATUS}
-              value={watch("status")}
-              onChange={(value) => setValue("status", value)}
-            />
-          }
+          // action={
+          //   <Select
+          //     color={Helper.handleColorStatus(getValues("status"))}
+          //     option={STATUS}
+          //     value={watch("status")}
+          //     onChange={(value) => setValue("status", value)}
+          //   />
+          // }
         >
           <div className='grid md:grid-cols-2 gap-4'>
             <div className='col-span-2'>
@@ -161,14 +161,14 @@ function ProductVariantFormComp(props: { id?: string }) {
             </div>
 
             <div className='col-span-2'>
-              <Textarea
+              {/* <Textarea
                 {...register('description')}
                 label='คำอธิบาย'
                 required
                 placeholder='กรอกคำอธิบาย'
                 helperText={errors.description ? errors.description.message : ''}
                 error={!!errors.description}
-              />
+              /> */}
             </div>
           </div>
         </CardBody>

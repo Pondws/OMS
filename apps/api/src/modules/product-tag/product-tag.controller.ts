@@ -15,7 +15,7 @@ const productTagController = {
   },
   findAll: async (req: Request, res: Response) => {
     try {
-      const productTags = await productTagService.findAll()
+      const productTags = await productTagService.findAll(req.query)
 
       res.json({
         data: productTags
