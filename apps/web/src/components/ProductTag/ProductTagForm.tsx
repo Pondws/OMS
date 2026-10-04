@@ -3,13 +3,15 @@
 import { memo, useEffect } from 'react'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import {
   Input,
   Button,
   Header,
+  CardBody,
+  Select,
 } from "components"
 import { productTagApi } from 'apis'
 import { useRouter } from 'next/navigation'
@@ -17,8 +19,9 @@ import { ProductTagType } from 'types'
 import { PRODUCT_TAG } from './product-tag.const'
 
 import { toast } from 'sonner'
-import { handleError } from "utils"
+import { handleError, Helper } from "utils"
 import { ArrowLeft, Save } from 'lucide-react'
+import { STATUS } from 'consts'
 
 const schema = z.object({
   name: z.string().nonempty('Name is required'),
@@ -38,8 +41,10 @@ function ProductTagFormComp(props: { id?: string }) {
   const queryClient = useQueryClient()
 
   const {
+    control,
     register,
     handleSubmit,
+    setValue,
     formState: {
       errors,
       isDirty
@@ -50,8 +55,14 @@ function ProductTagFormComp(props: { id?: string }) {
     defaultValues
   })
 
+  const value = useWatch({
+    control
+  })
+
+  console.log("value", value)
+
   const {
-    data,
+    data
   } = useQuery({
     queryKey: ["product-tag", id],
     queryFn: () => {
@@ -91,13 +102,13 @@ function ProductTagFormComp(props: { id?: string }) {
           { name: PRODUCT_TAG.name, path: PRODUCT_TAG.path() },
           { name: PRODUCT_TAG.text(id ? 'update' : 'create'), path: '' }
         ]}
-        title={PRODUCT_TAG.name}
+        title={PRODUCT_TAG.text(id ? 'update' : 'create')}
         actionButton={
           <>
             <Button
               onClick={() => router.push(PRODUCT_TAG.path())}
               size='lg'
-              // className='min-w-9'
+              className='px-8'
               variant='outline'
             >
               <ArrowLeft />
@@ -106,7 +117,7 @@ function ProductTagFormComp(props: { id?: string }) {
             <Button
               type='submit'
               size='lg'
-              // className='min-w-9'
+              className='px-8'
               disabled={!isDirty || isPending}
               onClick={handleSubmit(values => mutate(values))}
             >
@@ -117,19 +128,35 @@ function ProductTagFormComp(props: { id?: string }) {
         }
       />
 
-      <form>
-        <div className='grid md:grid-cols-2'>
-          <div className='col-span-1'>
-            <Input
-              {...register('name')}
-              label='Name'
-              placeholder='Please fill Name'
-              helperText={errors.name ? errors.name.message : ''}
-              error={!!errors.name}
+      {/* <form onSubmit={() => }> */}
+        <CardBody
+          title='ข้อมูลแท็กสินค้า'
+          action={
+            <Select
+              className={Helper.handleColorStatus(value?.status)}
+              options={STATUS}
+              value={value.status}
+              onChange={(value) => {
+                if (value === "ACTIVE" || value === "INACTIVE") {
+                  setValue("status", value)
+                }
+              }}
             />
+          }
+        >
+          <div className='grid md:grid-cols-2'>
+            <div className='col-span-1'>
+              <Input
+                {...register('name')}
+                label='ชื่อแท็กสินค้า'
+                placeholder='กรุณากรอกชื่อแท็กสินค้า'
+                helperText={errors.name ? errors.name.message : ''}
+                error={!!errors.name}
+              />
+            </div>
           </div>
-        </div>
-      </form>
+        </CardBody>
+      {/* </form> */}
     </div>
   )
 }

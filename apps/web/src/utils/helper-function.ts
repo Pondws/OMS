@@ -3,14 +3,32 @@ import {
 } from "lodash"
 
 export const Helper = {
-  handleColorStatus: (status: string) => {
+  handleColorStatus: (
+    status: "ACTIVE" | "INACTIVE" | undefined
+  ) => {
     switch (status) {
       case "ACTIVE":
-        return "border-green-500/25 text-green-600"
+        return [
+          "border-success",
+          "text-success",
+          "font-semibold"
+        ].join(" ")
+
       case "INACTIVE":
-        return "border-gray-500/25 text-gray-500"
+        return [
+          "border-muted-foreground",
+          "text-muted-foreground",
+          "font-semibold"
+        ].join(" ")
+
       default:
-        return "border-gray-300 bg-white text-black hover:bg-gray-100 focus:bg-gray-200 focus:ring-gray-300"
+        return [
+          "border-input",
+          "bg-background",
+          "text-foreground",
+          "hover:bg-accent",
+          "focus:ring-ring/30",
+        ].join(" ")
     }
   },
   createQueryString: (values: Record<string, unknown>) => {

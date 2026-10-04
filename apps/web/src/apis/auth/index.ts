@@ -6,7 +6,7 @@ export const authApi = {
     const res = await axios.post('/auth/login', data)
     return res.data.data
   },
-  getMe: async () => {
+   getMe: async () => {
     const res = await axios.get('/me')
     return res.data
   },

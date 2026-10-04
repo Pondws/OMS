@@ -5,7 +5,7 @@ import { useParams } from "next/navigation"
 
 export default function ProductTagEditPage() {
   const params = useParams()
-  const id = params.id
+  const id = params?.id as string
 
-  return <ProductTagForm id={id as string} />
+  return <ProductTagForm id={id} />
 }

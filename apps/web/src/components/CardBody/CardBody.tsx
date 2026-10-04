@@ -26,7 +26,7 @@ export function CardBody(props: CardBodyProps) {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>
-          <h4>
+          <h4 className="text-2xl">
             {title}
           </h4>
         </CardTitle>

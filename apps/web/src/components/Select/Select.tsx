@@ -39,8 +39,6 @@ export function Select({
   onChange,
 }: SelectProps) {
   return (
-    // <FieldGroup className="w-full max-w-xs">
-    //   <Field>
     <SelectBase
       items={options}
       value={value}
@@ -65,7 +63,5 @@ export function Select({
         </SelectGroup>
       </SelectContent>
     </SelectBase>
-    //   </Field>
-    // </FieldGroup>
   )
 }
