@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser"
 import authRoute from './modules/auth/auth.route'
 import userRoute from './modules/user/user.route'
 import productTagRoute from './modules/product-tag/product-tag.route'
+import productCategoryRoute from './modules/product-category/product-category.route'
 
 const app = express()
 
@@ -18,6 +19,7 @@ app.use(cookieParser())
 
 app.use('/auth', authRoute)
 app.use(userRoute)
+app.use('/product-category', productCategoryRoute)
 app.use('/product-tag', productTagRoute)
 
 export default app
