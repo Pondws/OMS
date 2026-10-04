@@ -4,7 +4,7 @@ import {
   CreateProductTag,
   UpdateProductTag
 } from "./product-tag.type"
-import z from "zod"
+import { z } from "zod"
 
 const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
