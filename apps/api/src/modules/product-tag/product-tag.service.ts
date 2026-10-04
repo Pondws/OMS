@@ -9,6 +9,10 @@ import z from "zod"
 const paginationSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
+
+  dateType: z.enum(["createdAt", "updatedAt"]).default("createdAt"),
+  // startDate: z.coerce.date().optional(),
+  // endDate: z.coerce.date().optional(),
 })
 
 const productTagService = {
@@ -22,13 +26,24 @@ const productTagService = {
   findAll: async (query: any) => {
     const {
       page,
-      limit
+      limit,
+      dateType,
+      // startDate,
+      // endDate,
     } = paginationSchema.parse(query)
 
     const skip = (page - 1) * limit
 
+    // const filter = {
+    //   [dateType]: {
+    //     gte: startDate,
+    //     lte: endDate
+    //   }
+    // }
+
     const [data, total] = await Promise.all([
       prisma.productTag.findMany({
+        // where: filter,
         skip,
         take: limit
       }),

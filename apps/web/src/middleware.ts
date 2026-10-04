@@ -4,21 +4,25 @@ import { PUBLIC_PATHS } from "consts"
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  const accessToken = req.cookies.get("accessToken")?.value
+  const accessToken =
+    req.cookies.get("accessToken")?.value
 
-  const isAuthenticated = !!accessToken
+  const refreshToken =
+    req.cookies.get("refreshToken")?.value
+
+  const hasSession = !!accessToken || !!refreshToken
 
   const isPublicPath = PUBLIC_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`)
   )
 
-  if (!isAuthenticated && !isPublicPath) {
+  if (!hasSession && !isPublicPath) {
     return NextResponse.redirect(
       new URL('/login', req.url)
     )
   }
 
-  if (isAuthenticated && pathname === "/login") {
+  if (hasSession && pathname === "/login") {
     return NextResponse.redirect(
       new URL('/dashboard', req.url)
     )

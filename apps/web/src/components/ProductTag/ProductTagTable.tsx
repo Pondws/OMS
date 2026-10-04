@@ -6,66 +6,92 @@ import {
   Button,
   Header,
   DatePicker,
-  DataTable
+  DataTable,
+  Autocomplete,
+  Select,
+  Input
 } from "components"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { productTagApi } from "apis"
 import { PRODUCT_TAG } from "./product-tag.const"
-import { useTableHeight } from "hooks"
+import { useTableHeight, useTableQuery } from "hooks"
 import { Plus } from "lucide-react"
+import { STATUS } from "consts"
+import { useForm, Controller, useWatch } from "react-hook-form"
+import { Helper } from "utils"
+import { omitBy } from "lodash"
 
 const defaultValues = {
+  name: "",
+  status: "",
   page: 1,
   limit: 3,
-  // startDate: '',
-  // endDate: '',
+  // dateType: "createdAt",
+  startDate: '',
+  endDate: '',
 }
 
 function ProductTagTableComp() {
   const router = useRouter()
-  // const queryClient = useQueryClient()
-  // const height = useTableHeight()
+  const {
+    queryValues,
+    updateQuery
+  } = useTableQuery()
 
+  const {
+    control,
+    register,
+    watch,
+    setValue,
+    reset
+  } = useForm({
+    defaultValues: {
+      ...defaultValues,
+      ...queryValues,
+    },
+  })
 
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(3)
-  // const fetchData = async () => {
-  //   const res = await productTagApi.getAll(defaultValues)
-  //   return res.data
-  // }
+  const value = useWatch({
+    control,
+  })
+
+  console.log("value", value)
+
+  const apiValue = omitBy(value, Helper.omitEmptyField)
 
   const {
     data,
     isFetching
   } = useQuery({
-    queryKey: ['product-tag', { page, limit }],
+    queryKey: ['product-tag', apiValue],
 
-    queryFn: () => productTagApi.getAll({
-      page,
-      limit
-    })
+    queryFn: () => productTagApi.getAll(apiValue)
   })
 
   const rows = data?.data ?? []
   const total = data?.meta?.total ?? 0
   const totalPages = data?.meta?.totalPages ?? 0
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage)
+  const handlePageChange = (page: number, limit: number) => {
+    setValue("page", page)
+    setValue("limit", limit)
+
+    updateQuery({
+      page,
+      limit,
+    })
   }
 
-  const handleLimitChange = (newLimit: number) => {
-    setLimit(newLimit)
-    setPage(1)
-  }
+  const handleLimitChange = (limit: number) => {
+    setValue("page", 1)
+    setValue("limit", limit)
 
-  // const {
-  //   mutate,
-  // } = useMutation({
-  //   mutationFn: (id: string) => productTagApi.deleteByID(id),
-  //   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-tag"] })
-  // })
+    updateQuery({
+      page: 1,
+      limit,
+    })
+  }
 
   return (
     <div className="p-4 overflow-hidden">
@@ -81,22 +107,79 @@ function ProductTagTableComp() {
           </Button>
         }
         filterBox={
-          <DatePicker />
+          <div>
+            {/* <DatePicker
+              dateTypeValue={value.dateType}
+              onDateTypeChange={(dateType) => {
+                setValue("dateType", dateType)
+                setValue("page", 1)
+
+                updateQuery({
+                  dateType,
+                  page: 1,
+                })
+              }}
+              startDate={value.startDate}
+              endDate={value.endDate}
+              onDateRangeChange={(range) => {
+                setValue("startDate", range.startDate)
+                setValue("endDate", range.endDate)
+                setValue("page", 1)
+
+                updateQuery({
+                  startDate: range.startDate,
+                  endDate: range.endDate,
+                  page: 1,
+                })
+              }}
+            /> */}
+
+            {/* <Input
+              placeholder="ชื่อ"
+              {...register("name")}
+            />
+
+            <Controller
+              name="status"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  placeholder="สถานะ"
+                  options={STATUS}
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            /> */}
+          </div>
         }
       />
 
       <DataTable
         columns={PRODUCT_TAG.columns}
         data={rows}
-        page={page}
-        limit={limit}
+        page={value?.page ?? defaultValues.page}
+        limit={value?.limit ?? defaultValues.limit}
         total={total}
         totalPages={totalPages}
         onPageChange={handlePageChange}
         onLimitChange={handleLimitChange}
       />
+    </div>
+  )
+}
 
-      {/* <Table
+export const ProductTagTable = memo(ProductTagTableComp)
+
+
+// const {
+//   mutate,
+// } = useMutation({
+//   mutationFn: (id: string) => productTagApi.deleteByID(id),
+//   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-tag"] })
+// })
+
+{/* <Table
         rows={rows}
         columns={PRODUCT_TAG.columns({
           onEdit: (id) => router.push(`${PRODUCT_TAG.path('edit')}/${id}`),
@@ -107,8 +190,3 @@ function ProductTagTableComp() {
         height={height}
         onRowClick={(row) => router.push(`${PRODUCT_TAG.path('edit')}/${row?.id}`)}
       /> */}
-    </div>
-  )
-}
-
-export const ProductTagTable = memo(ProductTagTableComp) 

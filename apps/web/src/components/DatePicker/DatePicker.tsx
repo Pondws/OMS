@@ -6,54 +6,177 @@ import {
   PopoverContent,
   PopoverTrigger,
   Calendar,
-  Button
+  Button,
+  Select
 } from "components"
+import { DATETYPE_OPTION } from "consts"
+import type { DateRange } from "react-day-picker"
 
-export function DatePicker() {
+type DateRangeChange = {
+  startDate: string
+  endDate: string
+}
+
+type DatePickerProps = {
+  dateTypeValue: string
+  onDateTypeChange: (value: string) => void
+  startDate: string
+  endDate: string
+  onDateRangeChange: (value: DateRangeChange) => void
+}
+
+// export function DatePicker({
+//   dateTypeValue,
+//   onDateTypeChange,
+//   startDate,
+//   endDate,
+//   onDateRangeChange
+// }: DatePickerProps) {
+//   const [open, setOpen] = useState(false)
+//   const [dateRange, setDateRange] = useState<DateRange | undefined>({
+//     from: startDate ? new Date(startDate) : undefined,
+//     to: endDate ? new Date(endDate) : undefined,
+//   })
+
+//   const handleOpenChange = (value: boolean) => {
+//     setOpen(value)
+
+//     // กำลังปิด
+//     if (!value && dateRange?.from && dateRange?.to) {
+//       onDateRangeChange({
+//         startDate: dateRange.from.toISOString(),
+//         endDate: dateRange.to.toISOString(),
+//       })
+//     }
+//   }
+
+//   return (
+//     <div className="flex">
+//       <Select
+//         className={"w-36 justify-between font-normal border-r-0 rounded-r-none"}
+//         options={DATETYPE_OPTION}
+//         value={dateTypeValue}
+//         onChange={(value) => {
+//           if (value) {
+//             onDateTypeChange(value)
+//           }
+//         }}
+//       />
+
+//       <Popover open={open} onOpenChange={handleOpenChange}>
+//         <PopoverTrigger
+//           render={
+//             <Button
+//               variant="outline"
+//               id="date"
+//               className="w-56 justify-between rounded-l-none font-normal"
+//             />
+//           }
+//         >
+//           {dateRange?.from ? (
+//             <>
+//               {dateRange.from.toLocaleDateString()}
+//               {dateRange.to && (
+//                 <> - {dateRange.to.toLocaleDateString()}</>
+//               )}
+//             </>
+//           ) : (
+//             "เลือกวันที่"
+//           )}
+//         </PopoverTrigger>
+//         <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+//           <Calendar
+//             mode="range"
+//             defaultMonth={dateRange?.from}
+//             numberOfMonths={2}
+//             selected={dateRange}
+//             onSelect={setDateRange}
+//             className="rounded-lg border shadow-sm"
+//           />
+//         </PopoverContent>
+//       </Popover>
+//     </div>
+//   )
+// }
+
+export function DatePicker({
+  dateTypeValue,
+  onDateTypeChange,
+  startDate,
+  endDate,
+  onDateRangeChange,
+}: DatePickerProps) {
   const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date | undefined>(
-    new Date(2025, 5, 12)
-  )
+
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: startDate ? new Date(startDate) : undefined,
+    to: endDate ? new Date(endDate) : undefined,
+  })
+
+  const handleOpenChange = (value: boolean) => {
+    setOpen(value)
+
+    // กำลังปิด
+    if (!value && dateRange?.from && dateRange?.to) {
+      onDateRangeChange({
+        startDate: dateRange.from.toISOString(),
+        endDate: dateRange.to.toISOString(),
+      })
+    }
+  }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            variant="outline"
-            id="date"
-            className="w-32 justify-between font-normal border-r-0 rounded-r-none"
-          />
-        }
+    <div className="flex">
+      <Select
+        className="w-36 justify-between font-normal border-r-0 rounded-r-none"
+        options={DATETYPE_OPTION}
+        value={dateTypeValue}
+        onChange={(value) => {
+          if (value) {
+            onDateTypeChange(value)
+          }
+        }}
+      />
+
+      <Popover
+        open={open}
+        onOpenChange={handleOpenChange}
       >
+        <PopoverTrigger
+          render={
+            <Button
+              variant="outline"
+              id="date"
+              className="w-56 justify-between rounded-l-none font-normal"
+            />
+          }
+        >
+          {dateRange?.from ? (
+            <>
+              {dateRange.from.toLocaleDateString()}
+              {dateRange.to && (
+                <> - {dateRange.to.toLocaleDateString()}</>
+              )}
+            </>
+          ) : (
+            "เลือกวันที่"
+          )}
+        </PopoverTrigger>
 
-        วันที่สร้าง
-        {/* <ChevronDownIcon /> */}
-      </PopoverTrigger>
-
-      <PopoverTrigger
-        render={
-          <Button
-            variant="outline"
-            id="date"
-            className="w-56 justify-between font-normal rounded-l-none"
+        <PopoverContent
+          className="w-auto overflow-hidden p-0"
+          align="start"
+        >
+          <Calendar
+            mode="range"
+            defaultMonth={dateRange?.from}
+            numberOfMonths={2}
+            selected={dateRange}
+            onSelect={setDateRange}
+            className="rounded-lg border shadow-sm"
           />
-        }
-      >
-
-        {date ? date.toLocaleDateString() : "Select date"}
-        {/* <ChevronDownIcon /> */}
-      </PopoverTrigger>
-      <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-        <Calendar
-          mode="range"
-          defaultMonth={date}
-          numberOfMonths={2}
-          // selected={date}
-          // onSelect={setDate}
-          className="rounded-lg border shadow-sm"
-        />
-      </PopoverContent>
-    </Popover >
+        </PopoverContent>
+      </Popover>
+    </div>
   )
 }

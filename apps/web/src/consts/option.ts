@@ -7,3 +7,8 @@ export const STATUS = [
   { label: "เปิดใช้งาน", value: "ACTIVE" },
   { label: "ปิดใช้งาน", value: "INACTIVE" },
 ]
+
+export const DATETYPE_OPTION = [
+  { label: "วันที่สร้าง", value: "createdAt" },
+  { label: "วันที่อัปเดต", value: "updatedAt" },
+]
