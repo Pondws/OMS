@@ -33,6 +33,9 @@ export const PRODUCT_TAG = {
     action?: AlertTextType.PathProps
   ) => action ? `/${defaultPath}/${action}` : `/${defaultPath}`,
   columns: columnHelper.columns([
+    columnHelper.accessor("name", {
+      header: "ชื่อแท็กสินค้า",
+    }),
     columnHelper.accessor("createdAt", {
       header: "วันที่สร้าง",
       cell: info => {
@@ -47,9 +50,6 @@ export const PRODUCT_TAG = {
         const { updatedAt } = info.row.original
         return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
       },
-    }),
-    columnHelper.accessor("name", {
-      header: "ชื่อแท็กสินค้า",
     }),
   ])
   // columnHelper.accessor("updatedAt", {

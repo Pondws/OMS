@@ -62,9 +62,9 @@ function ProductVariantTableComp() {
             {PRODUCT_VARIANT.text('create')}
           </Button>
         }
-        filterBox={
-          <DatePicker />
-        }
+        // filterBox={
+        //   <DatePicker />
+        // }
       />
 
       {/* <Table

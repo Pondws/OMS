@@ -150,7 +150,7 @@ import {
 } from "@/components/ui/pagination"
 
 import {
-  Select,
+  SelectBase,
   SelectContent,
   SelectGroup,
   SelectItem,
@@ -167,7 +167,7 @@ interface DataTableProps<TData extends RowData> {
   total: number
   totalPages: number
 
-  onPageChange: (page: number) => void
+  onPageChange: (page: number, limit: number) => void
   onLimitChange: (page: number) => void
 }
 
@@ -187,8 +187,14 @@ export function DataTable<TData extends RowData>({
     columns,
   })
 
+  console.log({
+    page,
+    limit,
+    totalPages,
+  })
+
   return (
-    <div>
+    <>
       <div className="overflow-hidden rounded-sm border">
         <TableBase>
           <TableHeader>
@@ -223,7 +229,7 @@ export function DataTable<TData extends RowData>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  No results.
+                  ไม่พบข้อมูล
                 </TableCell>
               </TableRow>
             )}
@@ -238,7 +244,7 @@ export function DataTable<TData extends RowData>({
             แสดง
           </span>
 
-          <Select
+          <SelectBase
             value={String(limit)}
             onValueChange={(value) => {
               onLimitChange(Number(value))
@@ -249,19 +255,21 @@ export function DataTable<TData extends RowData>({
             </SelectTrigger>
 
             <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
+              <SelectItem value="3">3</SelectItem>
+              <SelectItem value="6">6</SelectItem>
+              <SelectItem value="9">9</SelectItem>
+              <SelectItem value="12">12</SelectItem>
             </SelectContent>
-          </Select>
+          </SelectBase>
+        </div>
+
+        <div className="text-sm text-muted-foreground">
+          ทั้งหมด {total}
         </div>
 
         {/* Pagination */}
         <div className="flex">
-          {/* <div className="text-sm text-muted-foreground">
-            ทั้งหมด {total}
-          </div> */}
+
 
           <Pagination>
             <PaginationContent>
@@ -272,7 +280,7 @@ export function DataTable<TData extends RowData>({
                     e.preventDefault()
 
                     if (page > 1) {
-                      onPageChange(page - 1)
+                      onPageChange(page - 1, limit)
                     }
                   }}
                 />
@@ -288,7 +296,7 @@ export function DataTable<TData extends RowData>({
                     isActive={pageNumber === page}
                     onClick={(e) => {
                       e.preventDefault()
-                      onPageChange(pageNumber)
+                      onPageChange(pageNumber, limit)
                     }}
                   >
                     {pageNumber}
@@ -303,7 +311,7 @@ export function DataTable<TData extends RowData>({
                     e.preventDefault()
 
                     if (page < totalPages) {
-                      onPageChange(page + 1)
+                      onPageChange(page + 1, limit)
                     }
                   }}
                 />
@@ -312,6 +320,6 @@ export function DataTable<TData extends RowData>({
           </Pagination>
         </div>
       </div>
-    </div>
+    </>
   )
 }
