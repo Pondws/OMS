@@ -45,7 +45,8 @@ const productTagService = {
       prisma.productTag.findMany({
         // where: filter,
         skip,
-        take: limit
+        take: limit,
+        orderBy: { createdAt: "desc" }
       }),
 
       prisma.productTag.count()

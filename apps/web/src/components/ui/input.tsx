@@ -23,7 +23,7 @@ function Input({
 }: InputProps) {
   return (
     <div>
-      {label && <Label className="mb-2">{label}</Label>}
+      {label && <Label className="mb-2 text-lg">{label}</Label>}
 
       <InputPrimitive
         type={type}
