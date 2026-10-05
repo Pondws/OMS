@@ -22,7 +22,7 @@ const productCategoryService = {
 
     const { skip, take } = getPagination(page, limit)
 
-    const filter = {
+    const where = {
       ...(name && {
         name: {
           contains: name,
@@ -47,7 +47,7 @@ const productCategoryService = {
 
     const [data, total] = await Promise.all([
       prisma.productCategory.findMany({
-        where: filter,
+        where,
         skip,
         take,
         orderBy: {
@@ -56,7 +56,7 @@ const productCategoryService = {
       }),
 
       prisma.productCategory.count({
-        where: filter
+        where
       })
     ])
 
@@ -64,6 +64,15 @@ const productCategoryService = {
       data,
       meta: getPaginationMeta(page, limit, total)
     }
+  },
+  getById:  async (id: string) => {
+    const result = await prisma.productCategory.findUnique({
+      where: {
+        id
+      }
+    })
+
+    return result
   }
 }
 
