@@ -14,11 +14,14 @@ const productCategoryController = {
   getAll: asyncHandler(async (req: Request, res: Response) => {
     const query = productCategorySchema.get.parse(req.query)
 
-    const productCategory = await productCategoryService.getAll(query)
+    const result = await productCategoryService.getAll(query)
 
-    res.json({
-      data: productCategory
-    })
+    res.json(result)
+  }),
+  getById: asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
+    const result = await productCategoryService.getById(req.params.id)
+
+    res.json(result)
   })
 }
 
