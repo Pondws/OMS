@@ -5,9 +5,9 @@ import productCategorySchema from "./product-category.schema"
 
 const productCategoryController = {
   create: asyncHandler(async (req: Request, res: Response) => {
-    const body = productCategorySchema.create.parse(req.body)
+    const payload = productCategorySchema.create.parse(req.body)
     
-    const productCategory = await productCategoryService.create(body)
+    const productCategory = await productCategoryService.create(payload)
 
     res.status(201).json({ data: productCategory })
   }),
@@ -25,7 +25,18 @@ const productCategoryController = {
 
     res.json(result)
   }),
+  update: asyncHandler(async (req, res) => {
+    const { id } = productCategorySchema.params.parse(req.params)
 
+    const payload = productCategorySchema.update.parse(req.body)
+    
+    const result = await productCategoryService.update(id, payload)
+
+    res.json({
+      data: result,
+      message: "อัปเดตหมวดหมู่สินค้าเรียบร้อย"
+    })
+  }),
   delete: asyncHandler(async (req, res) => {
     const { id } = productCategorySchema.params.parse(req.params)
     

@@ -5,6 +5,10 @@ export type CreateProductCategory = z.input<
   typeof productCategorySchema.create
 >
 
+export type UpdateProductCategory = z.input<
+  typeof productCategorySchema.update
+>
+
 export type GetProductCategory = z.infer<
   typeof productCategorySchema.get
 >
