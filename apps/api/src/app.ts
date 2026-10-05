@@ -6,6 +6,7 @@ import authRoute from './modules/auth/auth.route'
 import userRoute from './modules/user/user.route'
 import productTagRoute from './modules/product-tag/product-tag.route'
 import productCategoryRoute from './modules/product-category/product-category.route'
+import { errorHandler } from './middlewares/error-handler'
 
 const app = express()
 
@@ -21,5 +22,7 @@ app.use('/auth', authRoute)
 app.use(userRoute)
 app.use('/product-category', productCategoryRoute)
 app.use('/product-tag', productTagRoute)
+
+app.use(errorHandler)
 
 export default app
