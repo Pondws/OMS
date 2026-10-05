@@ -7,6 +7,7 @@ const router = Router()
 router.post("/", authorization, productCategoryController.create)
 router.get("/", authorization, productCategoryController.getAll)
 router.get("/:id", authorization, productCategoryController.getById)
+router.put("/:id", authorization, productCategoryController.update)
 router.delete("/:id", authorization, productCategoryController.delete)
 
 export default router
