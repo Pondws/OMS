@@ -65,7 +65,7 @@ const productCategoryService = {
       meta: getPaginationMeta(page, limit, total)
     }
   },
-  getById:  async (id: string) => {
+  getById: async (id: string) => {
     const result = await prisma.productCategory.findUnique({
       where: {
         id
@@ -73,7 +73,16 @@ const productCategoryService = {
     })
 
     return result
-  }
+  },
+  delete: async (id: string) => {
+    const result = await prisma.productCategory.delete({
+      where: {
+        id
+      }
+    })
+
+    return result
+  },
 }
 
 export default productCategoryService
