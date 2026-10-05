@@ -1,21 +1,19 @@
 "use client"
 
-import { memo, useState } from "react"
+import { memo } from "react"
 import {
-  // Table,
   Button,
   Header,
   DatePicker,
   DataTable,
-  Autocomplete,
   Select,
   Input
 } from "components"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
-import { productTagApi } from "apis"
-import { PRODUCT_TAG } from "./product-tag.const"
-import { useTableHeight, useTableQuery } from "hooks"
+import { productCategoryApi } from "apis"
+import { PRODUCT_CATEGORY } from "./product-category.const"
+import { useTableQuery } from "hooks"
 import { Plus } from "lucide-react"
 import { STATUS } from "consts"
 import { useForm, Controller, useWatch } from "react-hook-form"
@@ -26,13 +24,13 @@ const defaultValues = {
   name: "",
   status: "",
   page: 1,
-  limit: 3,
-  // dateType: "createdAt",
+  limit: 10,
+  dateType: "createdAt",
   startDate: '',
   endDate: '',
 }
 
-function ProductTagTableComp() {
+function ProductCategoryTableComp() {
   const router = useRouter()
   const {
     queryValues,
@@ -42,9 +40,7 @@ function ProductTagTableComp() {
   const {
     control,
     register,
-    watch,
     setValue,
-    reset
   } = useForm({
     defaultValues: {
       ...defaultValues,
@@ -56,17 +52,14 @@ function ProductTagTableComp() {
     control,
   })
 
-  console.log("value", value)
-
   const apiValue = omitBy(value, Helper.omitEmptyField)
 
   const {
-    data,
-    isFetching
+    data
   } = useQuery({
-    queryKey: ['product-tag', apiValue],
+    queryKey: ['product-category', apiValue],
 
-    queryFn: () => productTagApi.getAll(apiValue)
+    queryFn: () => productCategoryApi.getAll(apiValue)
   })
 
   const rows = data?.data ?? []
@@ -94,21 +87,21 @@ function ProductTagTableComp() {
   }
 
   return (
-<div className="flex h-full flex-col overflow-hidden p-4">
+    <div className="flex h-full flex-col overflow-hidden p-4">
       <Header
-        title={PRODUCT_TAG.name}
+        title={PRODUCT_CATEGORY.name}
         actionButton={
           <Button
-            onClick={() => router.push(PRODUCT_TAG.path('create'))}
+            onClick={() => router.push(PRODUCT_CATEGORY.path('create'))}
             size='lg'
           >
             <Plus />
-            {PRODUCT_TAG.text('create')}
+            {PRODUCT_CATEGORY.text('create')}
           </Button>
         }
         filterBox={
-          <div>
-            {/* <DatePicker
+          <>
+            <DatePicker
               dateTypeValue={value.dateType}
               onDateTypeChange={(dateType) => {
                 setValue("dateType", dateType)
@@ -132,7 +125,7 @@ function ProductTagTableComp() {
                   page: 1,
                 })
               }}
-            /> */}
+            />
 
             {/* <Input
               placeholder="ชื่อ"
@@ -151,42 +144,25 @@ function ProductTagTableComp() {
                 />
               )}
             /> */}
-          </div>
+          </>
         }
       />
 
-      <DataTable
-        columns={PRODUCT_TAG.columns}
-        data={rows}
-        page={value?.page ?? defaultValues.page}
-        limit={value?.limit ?? defaultValues.limit}
-        total={total}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-        onLimitChange={handleLimitChange}
-      />
+      {/* <div className="min-h-0 flex-1"> */}
+        <DataTable
+          columns={PRODUCT_CATEGORY.columns}
+          data={rows}
+          page={value?.page ?? defaultValues.page}
+          limit={value?.limit ?? defaultValues.limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+        />
+      {/* </div> */}
+
     </div>
   )
 }
 
-export const ProductTagTable = memo(ProductTagTableComp)
-
-
-// const {
-//   mutate,
-// } = useMutation({
-//   mutationFn: (id: string) => productTagApi.deleteByID(id),
-//   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-tag"] })
-// })
-
-{/* <Table
-        rows={rows}
-        columns={PRODUCT_TAG.columns({
-          onEdit: (id) => router.push(`${PRODUCT_TAG.path('edit')}/${id}`),
-          onDelete: (id) => mutate(id),
-        })}
-        loading={isFetching}
-        totalRows={totalRows}
-        height={height}
-        onRowClick={(row) => router.push(`${PRODUCT_TAG.path('edit')}/${row?.id}`)}
-      /> */}
+export const ProductCategoryTable = memo(ProductCategoryTableComp)
