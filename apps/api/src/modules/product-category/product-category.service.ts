@@ -4,10 +4,10 @@ import { CreateProductCategory } from "./product-category.type"
 
 const productCategoryService = {
   create: (payload: CreateProductCategory) => {
-    const data = productCategorySchema.create.parse(payload)
+    const values = productCategorySchema.create.parse(payload)
     
     return prisma.productCategory.create({
-      data
+      data: values,
     })
   }
 }
