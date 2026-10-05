@@ -136,13 +136,9 @@ import {
   TableRow,
 } from "components"
 
-import { features, type DataTableFeatures } from "./data-table-features"
-
-
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -152,11 +148,12 @@ import {
 import {
   SelectBase,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+
+import { features, type DataTableFeatures } from "./data-table-features"
 
 interface DataTableProps<TData extends RowData> {
   columns: ColumnDef<DataTableFeatures, TData>[]
@@ -187,15 +184,12 @@ export function DataTable<TData extends RowData>({
     columns,
   })
 
-  console.log({
-    page,
-    limit,
-    totalPages,
-  })
+  const start = total > 0 ? (page - 1) * limit + 1 : 0
+  const end = Math.min(page * limit, total)
 
   return (
-    <>
-      <div className="overflow-hidden rounded-sm border">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="min-h-0 flex-1 overflow-auto rounded-sm border">
         <TableBase>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -237,39 +231,35 @@ export function DataTable<TData extends RowData>({
         </TableBase>
       </div>
 
-      <div className="flex items-center justify-between mt-3">
-        {/* Rows per page */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            แสดง
-          </span>
+      <div className="mt-3 flex shrink-0 items-center justify-between">
+        <span className="text-sm text-muted-foreground">
+          แสดง {start} – {end} จาก {total} รายการ
+        </span>
 
-          <SelectBase
-            value={String(limit)}
-            onValueChange={(value) => {
-              onLimitChange(Number(value))
-            }}
-          >
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
+        <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              แสดง
+            </span>
 
-            <SelectContent>
-              <SelectItem value="3">3</SelectItem>
-              <SelectItem value="6">6</SelectItem>
-              <SelectItem value="9">9</SelectItem>
-              <SelectItem value="12">12</SelectItem>
-            </SelectContent>
-          </SelectBase>
-        </div>
+            <SelectBase
+              value={String(limit)}
+              onValueChange={(value) => {
+                onLimitChange(Number(value))
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
 
-        <div className="text-sm text-muted-foreground">
-          ทั้งหมด {total}
-        </div>
-
-        {/* Pagination */}
-        <div className="flex">
-
+              <SelectContent>
+                <SelectItem value="3">3</SelectItem>
+                <SelectItem value="6">6</SelectItem>
+                <SelectItem value="9">9</SelectItem>
+                <SelectItem value="12">12</SelectItem>
+              </SelectContent>
+            </SelectBase>
+          </div>
 
           <Pagination>
             <PaginationContent>
@@ -320,6 +310,6 @@ export function DataTable<TData extends RowData>({
           </Pagination>
         </div>
       </div>
-    </>
+    </div>
   )
 }

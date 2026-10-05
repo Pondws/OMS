@@ -18,10 +18,10 @@ type DateRangeChange = {
 }
 
 type DatePickerProps = {
-  dateTypeValue: string
+  dateTypeValue: string | undefined
   onDateTypeChange: (value: string) => void
-  startDate: string
-  endDate: string
+  startDate: string | undefined
+  endDate: string | undefined
   onDateRangeChange: (value: DateRangeChange) => void
 }
 
