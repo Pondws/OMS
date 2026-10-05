@@ -18,10 +18,21 @@ const productCategoryController = {
 
     res.json(result)
   }),
-  getById: asyncHandler(async (req: Request<{ id: string }>, res: Response) => {
-    const result = await productCategoryService.getById(req.params.id)
+  getById: asyncHandler(async (req, res) => {
+    const { id } = productCategorySchema.params.parse(req.params)
+
+    const result = await productCategoryService.getById(id)
 
     res.json(result)
+  }),
+
+  delete: asyncHandler(async (req, res) => {
+    const { id } = productCategorySchema.params.parse(req.params)
+    
+    await productCategoryService.delete(id)
+    res.json({
+      message: "ลบหมวดหมู่สินค้าเรียบร้อย"
+    }) 
   })
 }
 
