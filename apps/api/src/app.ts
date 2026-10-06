@@ -20,8 +20,8 @@ app.use(cookieParser())
 
 app.use('/auth', authRoute)
 app.use(userRoute)
-app.use('/product-category', productCategoryRoute)
-app.use('/product-tag', productTagRoute)
+app.use('/product-categories', productCategoryRoute)
+app.use('/product-tags', productTagRoute)
 
 app.use(errorHandler)
 

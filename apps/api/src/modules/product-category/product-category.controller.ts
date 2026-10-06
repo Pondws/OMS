@@ -25,6 +25,13 @@ const productCategoryController = {
 
     res.json(result)
   }),
+  getOptions: asyncHandler(async (req, res) => {
+    const query = productCategorySchema.getOptions.parse(req.query)
+
+    const data = await productCategoryService.getOptions(query)
+
+    res.json(data)
+  }),
   update: asyncHandler(async (req, res) => {
     const { id } = productCategorySchema.params.parse(req.params)
 
@@ -44,7 +51,7 @@ const productCategoryController = {
     res.json({
       message: "ลบหมวดหมู่สินค้าเรียบร้อย"
     }) 
-  })
+  }),
 }
 
 export default productCategoryController
