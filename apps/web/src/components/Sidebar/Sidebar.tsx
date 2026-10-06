@@ -54,10 +54,12 @@ import {
 } from 'next/navigation'
 import { authApi } from 'apis'
 import { toast } from 'sonner'
+import { useMe } from 'hooks'
 
 export function Sidebar() {
   const router = useRouter()
   const { isMobile } = useSidebar()
+  const { data } = useMe()
   const segment = useSelectedLayoutSegment()
   const queryClient = useQueryClient()
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({})
@@ -228,7 +230,10 @@ export function Sidebar() {
 
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                    test
+                    {data?.name}
+                  </span>
+                  <span className="truncate">
+                    {data?.email}
                   </span>
                 </div>
 
@@ -236,7 +241,6 @@ export function Sidebar() {
               </DropdownMenuTrigger>
 
               <DropdownMenuContent
-                className="min-w-56 rounded-lg"
                 side={isMobile ? "bottom" : "right"}
                 align="end"
                 sideOffset={isMobile ? 4 : 16}
@@ -252,7 +256,7 @@ export function Sidebar() {
 
                       <div className="grid flex-1 text-left text-sm leading-tight">
                         <span className="truncate font-medium">
-                          test
+                          {data?.name}
                         </span>
                       </div>
                     </div>
