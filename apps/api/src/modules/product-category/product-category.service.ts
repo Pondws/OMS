@@ -1,6 +1,11 @@
 import { prisma } from "../../lib/prisma"
 import { getPagination, getPaginationMeta } from "../../utils/pagination"
-import { CreateProductCategory, GetProductCategory, UpdateProductCategory } from "./product-category.type"
+import {
+  CreateProductCategory,
+  GetProductCategory,
+  UpdateProductCategory,
+  GetProductCategoryOptions
+} from "./product-category.type"
 
 const productCategoryService = {
   create: (payload: CreateProductCategory) => {
@@ -69,6 +74,34 @@ const productCategoryService = {
       where: {
         id
       }
+    })
+
+    return result
+  },
+  getOptions: async (query: GetProductCategoryOptions) => {
+    const { search } = query
+
+    const result = await prisma.productCategory.findMany({
+      where:  {
+      status: "ACTIVE",
+      ...(search
+        ? {
+          name: {
+            contains: search,
+            mode: "insensitive"
+          }
+        }
+        : {}
+      )
+    },
+      select: {
+        id: true,
+        name: true
+      },
+      orderBy: {
+        name: "asc",
+      },
+      take: 10
     })
 
     return result

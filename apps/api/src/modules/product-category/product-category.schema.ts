@@ -16,7 +16,10 @@ const productCategorySchema = {
   }),
   params: z.object({
     id: z.uuid()
-  })
+  }),
+  getOptions: z.object({
+    search: z.string().trim().optional(),
+  }),
 }
 
 export default productCategorySchema

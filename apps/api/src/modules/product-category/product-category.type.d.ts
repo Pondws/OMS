@@ -12,3 +12,7 @@ export type UpdateProductCategory = z.input<
 export type GetProductCategory = z.infer<
   typeof productCategorySchema.get
 >
+
+export type GetProductCategoryOptions = z.infer<
+  typeof productCategorySchema.getOptions
+>
