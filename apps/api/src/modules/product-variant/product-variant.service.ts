@@ -2,7 +2,7 @@ import { prisma } from "../../lib/prisma"
 import { getPagination, getPaginationMeta } from "../../utils/pagination"
 import {
   CreateProductVariant,
-  // GetProductCategory,
+  GetProductVariant,
   // UpdateProductCategory,
   // GetProductCategoryOptions
 } from "./product-variant.type"
@@ -41,71 +41,85 @@ const productVariantService = {
 
     return result
   },
-  // getAll: async (query: GetProductCategory) => {
-  //   const {
-  //     page,
-  //     limit,
-  //     dateType,
-  //     startDate,
-  //     endDate,
-  //     name,
-  //     status
-  //   } = query
+  getAll: async (query: GetProductVariant) => {
+    const {
+      page,
+      limit,
+      dateType,
+      startDate,
+      endDate,
+      name,
+      status
+    } = query
 
-  //   const { skip, take } = getPagination(page, limit)
+    const { skip, take } = getPagination(page, limit)
 
-  //   const where = {
-  //     ...(name && {
-  //       name: {
-  //         contains: name,
-  //         mode: "insensitive" as const
-  //       }
-  //     }),
+    const where = {
+      ...(name && {
+        name: {
+          contains: name,
+          mode: "insensitive" as const
+        }
+      }),
 
-  //     ...(status && {
-  //       status
-  //     }),
+      ...(status && {
+        status
+      }),
 
-  //     ...(startDate && endDate
-  //       ? {
-  //         [dateType]: {
-  //           gte: startDate,
-  //           lte: endDate
-  //         }
-  //       }
-  //       : {}
-  //     )
-  //   }
+      ...(startDate && endDate
+        ? {
+          [dateType]: {
+            gte: startDate,
+            lte: endDate
+          }
+        }
+        : {}
+      )
+    }
 
-  //   const [data, total] = await Promise.all([
-  //     prisma.productCategory.findMany({
-  //       where,
-  //       skip,
-  //       take,
-  //       orderBy: {
-  //         [dateType]: "desc"
-  //       }
-  //     }),
+    const [data, total] = await Promise.all([
+      prisma.productVariant.findMany({
+        where,
+        skip,
+        take,
+        orderBy: {
+          [dateType]: "desc"
+        },
+        include: {
+          variants: {
+            orderBy: {
+              sortOrder: "asc"
+            }
+          }
+        }
+      }),
 
-  //     prisma.productCategory.count({
-  //       where
-  //     })
-  //   ])
+      prisma.productCategory.count({
+        where
+      })
+    ])
 
-  //   return {
-  //     data,
-  //     meta: getPaginationMeta(page, limit, total)
-  //   }
-  // },
-  // getById: async (id: string) => {
-  //   const result = await prisma.productCategory.findUnique({
-  //     where: {
-  //       id
-  //     }
-  //   })
+    return {
+      data,
+      meta: getPaginationMeta(page, limit, total)
+    }
+  },
+  getById: async (id: string) => {
+    const result = await prisma.productVariant.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        variants: {
+          orderBy: {
+            sortOrder: "asc"
+          }
+        }
+      }
+    })
 
-  //   return result
-  // },
+    return result
+  },
   // getOptions: async (query: GetProductCategoryOptions) => {
   //   const { search } = query
 

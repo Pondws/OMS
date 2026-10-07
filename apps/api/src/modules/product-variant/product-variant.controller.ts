@@ -11,20 +11,20 @@ const productVariantController = {
 
     res.status(201).json({ data: productVariant })
   }),
-  // getAll: asyncHandler(async (req: Request, res: Response) => {
-  //   const query = productCategorySchema.get.parse(req.query)
+  getAll: asyncHandler(async (req: Request, res: Response) => {
+    const query = productVariantSchema.get.parse(req.query)
 
-  //   const result = await productCategoryService.getAll(query)
+    const result = await productVariantService.getAll(query)
 
-  //   res.json(result)
-  // }),
-  // getById: asyncHandler(async (req, res) => {
-  //   const { id } = productCategorySchema.params.parse(req.params)
+    res.json(result)
+  }),
+  getById: asyncHandler(async (req, res) => {
+    const { id } = productVariantSchema.params.parse(req.params)
 
-  //   const result = await productCategoryService.getById(id)
+    const result = await productVariantService.getById(id)
 
-  //   res.json(result)
-  // }),
+    res.json(result)
+  }),
   // getOptions: asyncHandler(async (req, res) => {
   //   const query = productCategorySchema.getOptions.parse(req.query)
 

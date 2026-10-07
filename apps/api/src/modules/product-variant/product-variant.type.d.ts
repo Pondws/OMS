@@ -9,9 +9,9 @@ export type CreateProductVariant = z.input<
 //   typeof productCategorySchema.update
 // >
 
-// export type GetProductCategory = z.infer<
-//   typeof productCategorySchema.get
-// >
+export type GetProductVariant = z.infer<
+  typeof productVariantSchema.get
+>
 
 // export type GetProductCategoryOptions = z.infer<
 //   typeof productCategorySchema.getOptions
