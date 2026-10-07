@@ -1,7 +1,5 @@
-export default function Product() {
-  return (
-    <div className="flex flex-col justify-center items-center h-full font-bold text-5xl">
-      Product
-    </div>
-  )
+import { ProductTable } from "components"
+
+export default function ProductCategoryTablePage() {
+  return <ProductTable />
 }

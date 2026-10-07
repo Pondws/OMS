@@ -1,7 +1,7 @@
 import { PaginationType, ProductTagType } from "types"
 import { axios } from 'utils'
 
-const PREFIX_PRODUCT_CATEGORY = '/product-category'
+const PREFIX_PRODUCT_CATEGORY = '/product-categories'
 
 export const productCategoryApi = {
   getAll: async (params?: PaginationType) => {
@@ -26,4 +26,8 @@ export const productCategoryApi = {
     const res = await axios.delete(`${PREFIX_PRODUCT_CATEGORY}/${id}`)
     return res?.data?.data
   },
+  search: async (query: string) => {
+    const res = await axios.get(`${PREFIX_PRODUCT_CATEGORY}/options/${query}`)
+    return res?.data
+  }
 }

@@ -1,7 +1,7 @@
 import { PaginationType, ProductTagType } from "types"
 import { axios } from 'utils'
 
-const PREFIX_PRODUCT_TAG = '/product-tag'
+const PREFIX_PRODUCT_TAG = '/product-tags'
 
 export const productTagApi = {
   getAll: async (params?: PaginationType) => {
