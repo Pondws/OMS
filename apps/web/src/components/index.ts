@@ -10,6 +10,7 @@ export * from './GuestProvider'
 export * from './DataTable'
 export * from './Autocomplete'
 export * from './Select'
+export * from './Sortable'
 
 export * from './ProductTag'
 export * from './ProductVariant'

@@ -9,7 +9,6 @@ export namespace ProductVariantType {
   }
   export interface ProductVariantForm {
     name: string
-    description: string
     status: Status
     options: ProductVariantType[]
   }

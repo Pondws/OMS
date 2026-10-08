@@ -16,9 +16,9 @@ import { PRODUCT_CATEGORY } from "./product-category.const"
 import { useTableQuery } from "hooks"
 import { Plus } from "lucide-react"
 import { STATUS } from "consts"
-import { useForm, Controller, useWatch } from "react-hook-form"
+import { useForm, useWatch } from "react-hook-form"
 import { Helper } from "utils"
-import { omitBy } from "lodash"
+import omitBy from "lodash/omitBy"
 
 const defaultValues = {
   name: "",

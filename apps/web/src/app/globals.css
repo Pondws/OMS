@@ -47,6 +47,8 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
+  --color-error: var(--destructive);
+
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
 

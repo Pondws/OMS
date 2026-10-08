@@ -5,11 +5,11 @@ const productVariantSchema = {
   create: z.object({
     name: z.string().trim().min(1).max(100),
     status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
-    variants: z.array(
+    options: z.array(
       z.object({
-        name: z.string().min(1).max(100)
+        name: z.string().trim().min(1).max(100)
       })
-    )
+    ).min(1)
   }),
   // update: z.object({
   //   name: z.string().trim().min(1).max(100),

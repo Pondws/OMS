@@ -12,16 +12,16 @@ const productVariantService = {
     const {
       name,
       status,
-      variants
+      options
     } = payload
 
     const result = prisma.productVariant.create({
       data: {
         name,
         status,
-        variants: variants
+        variants: options
           ? {
-            create: variants.map((variant, index) => (
+            create: options.map((variant, index) => (
               {
                 name: variant.name,
                 sortOrder: index + 1
@@ -87,10 +87,17 @@ const productVariantService = {
   //       }
   //     }),
 
+<<<<<<< Updated upstream
   //     prisma.productCategory.count({
   //       where
   //     })
   //   ])
+=======
+      prisma.productVariant.count({
+        where
+      })
+    ])
+>>>>>>> Stashed changes
 
   //   return {
   //     data,
