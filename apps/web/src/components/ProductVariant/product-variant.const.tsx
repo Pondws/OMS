@@ -11,11 +11,13 @@ import {
   Button
 } from 'components'
 import { EllipsisVertical, SquarePen, Trash } from "lucide-react"
+import { type DataTableFeatures } from "components"
 
 const defaultName = 'ตัวเลือกสินค้า'
 const defaultPaht = 'product-variant'
 
-// const columnHelper = createColumnHelper<ProductTagType.GetProductTag>()
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const columnHelper = createColumnHelper<DataTableFeatures, any>()
 
 export const PRODUCT_VARIANT = {
   name: defaultName,
@@ -29,66 +31,23 @@ export const PRODUCT_VARIANT = {
   path: (
     action?: AlertTextType.PathProps
   ) => action ? `/${defaultPaht}/${action}` : `/${defaultPaht}`,
-  // columns: (
-  //   action: {
-  //     onDelete?: (id: string) => void
-  //     onEdit?: (id: string) => void
-  //   }) => [
-  //     columnHelper.accessor("createdAt", {
-  //       header: "วันที่สร้าง",
-  //       cell: info => {
-  //         const { createdAt } = info.row.original
-  //         return createdAt ? format(createdAt, 'dd/MM/yyyy') : '-'
-  //       },
-  //       meta: {
-  //         width: 120
-  //       }
-  //     }),
-  //     columnHelper.accessor("updatedAt", {
-  //       header: "วันที่แก้ไข",
-  //       cell: info => {
-  //         const { updatedAt } = info.row.original
-  //         return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
-  //       },
-  //       meta: {
-  //         width: 120
-  //       }
-  //     }),
-  //     columnHelper.accessor("name", {
-  //       header: "ชื่อตัวเลือกสินค้า",
-  //       meta: {
-  //         width: 'auto'
-  //       }
-  //     }),
-  //     columnHelper.display({
-  //       id: 'action',
-  //       cell: ({ row }) => (
-  //         <DropdownMenu>
-  //           <DropdownMenuTrigger asChild>
-  //             <Button variant="ghost" className="h-9 w-9 p-0">
-  //               <EllipsisVertical />
-  //             </Button>
-  //           </DropdownMenuTrigger>
-  //           <DropdownMenuContent align="end">
-  //             <DropdownMenuItem
-  //               onClick={() => action.onEdit?.(row.original.id)}
-  //             >
-  //               <SquarePen />
-  //               Edit
-  //             </DropdownMenuItem>
-  //             <DropdownMenuSeparator />
-  //             <DropdownMenuItem
-  //               onClick={() => action.onDelete?.(row.original.id)}
-  //             >
-  //               <Trash />
-  //               Delete
-  //             </DropdownMenuItem>
-  //           </DropdownMenuContent>
-  //         </DropdownMenu>
-  //       ),
-  //       meta: {
-  //         width: 50
-  //       }
-  //     })
-  //   ] as ColumnDef<ProductTagType.GetProductTag>[]
-} 
+  columns: columnHelper.columns([
+    columnHelper.accessor("name", {
+      header: "ชื่อหมวดหมู่สินค้า",
+    }),
+    columnHelper.accessor("createdAt", {
+      header: "วันที่สร้าง",
+      cell: info => {
+        const { updatedAt } = info.row.original
+        return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
+      },
+    }),
+    columnHelper.accessor("updatedAt", {
+      header: "วันที่อัปเดต",
+      cell: info => {
+        const { updatedAt } = info.row.original
+        return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
+      },
+    }),
+  ])
+}

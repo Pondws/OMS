@@ -12,16 +12,16 @@ const productVariantService = {
     const {
       name,
       status,
-      variants
+      options
     } = payload
 
     const result = prisma.productVariant.create({
       data: {
         name,
         status,
-        variants: variants
+        variants: options
           ? {
-            create: variants.map((variant, index) => (
+            create: options.map((variant, index) => (
               {
                 name: variant.name,
                 sortOrder: index + 1
@@ -84,17 +84,10 @@ const productVariantService = {
         take,
         orderBy: {
           [dateType]: "desc"
-        },
-        include: {
-          variants: {
-            orderBy: {
-              sortOrder: "asc"
-            }
-          }
         }
       }),
 
-      prisma.productCategory.count({
+      prisma.productVariant.count({
         where
       })
     ])

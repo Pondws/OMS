@@ -1,14 +1,14 @@
 import { PaginationType, ProductVariantType } from "types"
 import { axios } from 'utils'
 
-const PREFIX_PRODUCT_VARIANT = '/product-variant'
+const PREFIX_PRODUCT_VARIANT = '/product-variants'
 
 export const productVariantApi = {
   getAll: async (params?: PaginationType) => {
     const res = await axios.get(PREFIX_PRODUCT_VARIANT, {
       params
     })
-    return { data: res?.data?.data, totalRows: res?.data?.totalRows }
+    return res?.data
   },
   create: async (data: ProductVariantType.ProductVariantForm) => {
     const res = await axios.post(PREFIX_PRODUCT_VARIANT, data)
