@@ -26,4 +26,8 @@ export const productCategoryApi = {
     const res = await axios.delete(`${PREFIX_PRODUCT_CATEGORY}/${id}`)
     return res?.data?.data
   },
+  search: async (query: string) => {
+    const res = await axios.get(`${PREFIX_PRODUCT_CATEGORY}/options/${query}`)
+    return res?.data
+  }
 }
