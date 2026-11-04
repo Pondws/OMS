@@ -11,8 +11,8 @@ import {
   Button,
   Header,
   CardBody,
-  Textarea,
   Select,
+  SortableList,
 } from "components"
 import { productVariantApi } from 'apis'
 import { useRouter } from 'next/navigation'
@@ -20,13 +20,12 @@ import { ProductVariantType } from 'types'
 import { PRODUCT_VARIANT } from './product-variant.const'
 
 import { toast } from 'sonner'
-import { handleError, Helper } from "utils"
-import { ArrowLeft, CirclePlus, GripVertical, Save, Trash } from 'lucide-react'
+import { handleError } from "utils"
+import { ArrowLeft, CirclePlus, Save, Trash } from 'lucide-react'
 import { STATUS } from 'consts'
 
 const defaultValues = {
   name: "",
-  description: "",
   status: "ACTIVE",
   options: [
     {
@@ -37,11 +36,30 @@ const defaultValues = {
 
 const schema = z.object({
   name: z.string().nonempty('กรุณากรอกชื่อตัวเลือกสินค้า'),
-  description: z.string(),
   status: z.string(),
-  options: z.array(z.object({
-    name: z.string().nonempty("กรุณากรอกชื่อตัวเลือก")
-  })).min(1, "ต้องมีตัวเลือกอย่างน้อย 1 ตัว")
+  options: z.array(
+    z.object({
+      name: z.string().nonempty("กรุณากรอกชื่อตัวเลือก")
+    })
+  )
+    .min(1, "ต้องมีตัวเลือกอย่างน้อย 1 ตัว")
+    .superRefine((options, ctx) => {
+      const names = options.map((option) =>
+        option.name.toLowerCase()
+      )
+
+      const duplicates = names.filter(
+        (name, index) =>
+          names.indexOf(name) !== index
+      )
+
+      if (duplicates.length > 0) {
+        ctx.addIssue({
+          code: "custom",
+          message: "ตัวเลือกต้องไม่ซ้ำกัน",
+        })
+      }
+    })
 })
 
 function ProductVariantFormComp(props: { id?: string }) {
@@ -58,15 +76,18 @@ function ProductVariantFormComp(props: { id?: string }) {
       isDirty
     },
     reset,
-    getValues,
     setValue,
-    watch
   } = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues
   })
 
-  const { fields, append, remove } = useFieldArray({
+  const {
+    fields,
+    append,
+    remove,
+    move
+  } = useFieldArray({
     name: "options",
     control
   })
@@ -139,14 +160,18 @@ function ProductVariantFormComp(props: { id?: string }) {
       <form className='flex flex-col gap-4'>
         <CardBody
           title='ข้อมูลตัวเลือกสินค้า'
-          // action={
-          //   <Select
-          //     color={Helper.handleColorStatus(getValues("status"))}
-          //     option={STATUS}
-          //     value={watch("status")}
-          //     onChange={(value) => setValue("status", value)}
-          //   />
-          // }
+          action={
+            <Select
+              // className={Helper.handleColorStatus(value?.status)}
+              options={STATUS}
+              // value={value.status}
+              onChange={(value) => {
+                if (value === "ACTIVE" || value === "INACTIVE") {
+                  setValue("status", value)
+                }
+              }}
+            />
+          }
         >
           <div className='grid md:grid-cols-2 gap-4'>
             <div className='col-span-2'>
@@ -159,52 +184,42 @@ function ProductVariantFormComp(props: { id?: string }) {
                 error={!!errors.name}
               />
             </div>
-
-            <div className='col-span-2'>
-              {/* <Textarea
-                {...register('description')}
-                label='คำอธิบาย'
-                required
-                placeholder='กรอกคำอธิบาย'
-                helperText={errors.description ? errors.description.message : ''}
-                error={!!errors.description}
-              /> */}
-            </div>
           </div>
         </CardBody>
 
         <CardBody title="ตัวเลือกสินค้า">
-          <div className='flex flex-col gap-3'>
-            {fields.map((field, index) => (
-              <div
-                key={field.id}
-                className='flex items-center gap-2'
-              >
-                <GripVertical className="cursor-grab" />
-
-                <Input
-                  {...register(`options.${index}.name`)}
-                  placeholder="กรอกชื่อตัวเลือกสินค้า"
-                  helperText={errors.options?.[index]?.name?.message}
-                  error={!!errors.options?.[index]?.name}
-                  className='flex-1'
-                />
+          <SortableList
+            items={fields}
+            getId={(field) => field.id}
+            onMove={(oldIndex, newIndex) => {
+              move(oldIndex, newIndex)
+            }}
+            renderItem={(_, index) => (
+              <div className="flex items-center gap-2">
+                <div className='flex-1 items-center'>
+                  <Input
+                    {...register(`options.${index}.name`)}
+                    placeholder="กรอกชื่อตัวเลือกสินค้า"
+                    helperText={errors.options?.[index]?.name?.message}
+                    error={!!errors.options?.[index]?.name}
+                  />
+                </div>
 
                 <Button
+                  type="button"
                   variant="ghost"
-                  className="h-9 w-9 p-0"
+                  className="h-9 w-9 shrink-0 p-0"
                   onClick={() => remove(index)}
                   disabled={fields.length <= 1}
                 >
                   <Trash />
                 </Button>
               </div>
-            ))}
-          </div>
-
+            )}
+          />
           <Button
             className='mt-4'
-            onClick={() => append({ name: "" })}
+            onClick={() => append(defaultValues.options)}
           >
             <CirclePlus />
             เพิ่มตัวเลือก

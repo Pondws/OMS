@@ -5,17 +5,21 @@ import {
   // Table,
   Button,
   Header,
-  DatePicker
+  DatePicker,
+  DataTable
 } from "components"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useRouter } from "next/navigation"
 import { productVariantApi } from "apis"
 import { PRODUCT_VARIANT } from "./product-variant.const"
-import { useTableHeight } from "hooks"
 import { Plus } from "lucide-react"
+import { Helper } from "utils"
+import omitBy from "lodash/omitBy"
+import { useForm, useWatch } from "react-hook-form"
+import { useTableQuery } from "hooks"
 
-const defaultVariants = {
-  page: 0,
+const defaultValues = {
+  page: 1,
   limit: 10,
   startDate: '',
   endDate: '',
@@ -23,32 +27,58 @@ const defaultVariants = {
 
 function ProductVariantTableComp() {
   const router = useRouter()
-  const queryClient = useQueryClient()
-  const height = useTableHeight()
-
-  const fetchData = async () => {
-    const res = await productVariantApi.getAll(defaultVariants)
-    return res
-  }
+  const {
+    queryValues,
+    updateQuery
+  } = useTableQuery()
 
   const {
-    data,
-    isFetching
-  } = useQuery({
-    queryKey: ['product-tag'],
-    queryFn: fetchData
+    control,
+    setValue,
+  } = useForm({
+    defaultValues: {
+      ...defaultValues,
+      ...queryValues,
+    },
   })
 
-  const rows = data?.data || []
-  const totalRows = data?.totalRows || 0
+  const value = useWatch({
+    control,
+  })
 
-  // const {
-  //   mutate,
-  // } = useMutation({
-  //   mutationFn: (id: string) => productVariantApi.deleteByID(id),
-  //   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["product-tag"] })
-  // })
+  const apiValue = omitBy(value, Helper.omitEmptyField)
 
+  const {
+    data
+  } = useQuery({
+    queryKey: ['product-category', apiValue],
+
+    queryFn: () => productVariantApi.getAll(apiValue)
+  })
+
+  const rows = data?.data ?? []
+  const total = data?.meta?.total ?? 0
+  const totalPages = data?.meta?.totalPages ?? 0
+
+  const handlePageChange = (page: number, limit: number) => {
+    setValue("page", page)
+    setValue("limit", limit)
+
+    updateQuery({
+      page,
+      limit,
+    })
+  }
+
+  const handleLimitChange = (limit: number) => {
+    setValue("page", 1)
+    setValue("limit", limit)
+
+    updateQuery({
+      page: 1,
+      limit,
+    })
+  }
   return (
     <div className="p-4 overflow-hidden">
       <Header
@@ -62,22 +92,21 @@ function ProductVariantTableComp() {
             {PRODUCT_VARIANT.text('create')}
           </Button>
         }
-        // filterBox={
-        //   <DatePicker />
-        // }
+      // filterBox={
+      //   <DatePicker />
+      // }
       />
 
-      {/* <Table
-        rows={rows}
-        columns={PRODUCT_VARIANT.columns({
-          onEdit: (id) => router.push(`${PRODUCT_VARIANT.path('edit')}/${id}`),
-          onDelete: (id) => mutate(id),
-        })}
-        loading={isFetching}
-        totalRows={totalRows}
-        height={height}
-        onRowClick={(row) => router.push(`${PRODUCT_VARIANT.path('edit')}/${row?.id}`)}
-      /> */}
+      <DataTable
+        columns={PRODUCT_VARIANT.columns}
+        data={rows}
+        page={value?.page ?? defaultValues.page}
+        limit={value?.limit ?? defaultValues.limit}
+        total={total}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        onLimitChange={handleLimitChange}
+      />
     </div>
   )
 }
