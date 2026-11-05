@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import productCategoryService from "./product-category.service"
 import { asyncHandler } from "../../middlewares/async-handler"
 import productCategorySchema from "./product-category.schema"
+import { getSearchOptionsSchema } from "../../shard/schemas/get-search-options"
 
 const productCategoryController = {
   create: asyncHandler(async (req: Request, res: Response) => {
@@ -26,7 +27,7 @@ const productCategoryController = {
     res.json(result)
   }),
   getOptions: asyncHandler(async (req, res) => {
-    const query = productCategorySchema.getOptions.parse(req.query)
+    const query = getSearchOptionsSchema.parse(req.query)
 
     const data = await productCategoryService.getOptions(query)
 

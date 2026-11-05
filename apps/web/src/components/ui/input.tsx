@@ -23,7 +23,7 @@ function Input({
 }: InputProps) {
   return (
     <div>
-      {label && <Label className="mb-2 text-lg">{label}</Label>}
+      {label && <Label className="mb-1 text-md">{label}</Label>}
 
       <InputPrimitive
         type={type}
@@ -36,8 +36,6 @@ function Input({
             "focus-visible:border-destructive",
             "focus-visible:ring-destructive/30",
           ],
-
-
           className
         )}
         {...props}

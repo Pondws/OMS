@@ -1,6 +1,8 @@
 import { Request, Response } from "express"
 import productTagService from "./product-tag.service"
 import { ProductTagParams } from "./product-tag.type"
+import { asyncHandler } from "../../middlewares/async-handler"
+import { getSearchOptionsSchema } from "../../shard/schemas/get-search-options"
 
 const productTagController = {
   create: async (req: Request, res: Response) => {
@@ -13,9 +15,9 @@ const productTagController = {
       })
     }
   },
-  findAll: async (req: Request, res: Response) => {
+  getAll: async (req: Request, res: Response) => {
     try {
-      const productTags = await productTagService.findAll(req.query)
+      const productTags = await productTagService.getAll(req.query)
 
       res.json({
         data: productTags
@@ -26,9 +28,9 @@ const productTagController = {
       })
     }
   },
-  findById: async (req: Request<ProductTagParams>, res: Response) => {
+  getById: async (req: Request<ProductTagParams>, res: Response) => {
     try {
-      const productTag = await productTagService.findById(req.params.id)
+      const productTag = await productTagService.getById(req.params.id)
 
       if (!productTag) {
         throw new Error("ไม่พบแท็กสินค้า")
@@ -43,6 +45,13 @@ const productTagController = {
       })
     }
   },
+  getOptions: asyncHandler(async (req, res) => {
+    const query = getSearchOptionsSchema.parse(req.query)
+
+    const data = await productTagService.getOptions(query)
+
+    res.json(data)
+  }),
   update: async (req: Request<ProductTagParams>, res: Response) => {
     try {
       const productTag = await productTagService.update(req.params.id, req.body)
