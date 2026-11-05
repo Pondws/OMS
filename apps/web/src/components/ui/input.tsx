@@ -36,8 +36,6 @@ function Input({
             "focus-visible:border-destructive",
             "focus-visible:ring-destructive/30",
           ],
-
-
           className
         )}
         {...props}

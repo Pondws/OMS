@@ -59,8 +59,6 @@ function ProductTagFormComp(props: { id?: string }) {
     control
   })
 
-  console.log("value", value)
-
   const {
     data
   } = useQuery({

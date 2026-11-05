@@ -3,9 +3,9 @@ import debounce from "lodash/debounce"
 
 export function useDebounce<T>(
   value: T,
-  delay: 300
+  delay: number = 300
 ) {
-  const [debouncedValue, setDebouncedValue] = useState(value)
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
 
   useEffect(() => {
     const update = debounce(() => {

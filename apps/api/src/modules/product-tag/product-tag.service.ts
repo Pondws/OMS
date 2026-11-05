@@ -1,4 +1,5 @@
 import { prisma } from "../../lib/prisma"
+import { GetSearchOptions } from "../../shard/schemas/get-search-options"
 import productTagSchema from "./product-tag.schema"
 import {
   CreateProductTag,
@@ -23,7 +24,7 @@ const productTagService = {
       data: validated
     })
   },
-  findAll: async (query: any) => {
+  getAll: async (query: any) => {
     const {
       page,
       limit,
@@ -64,12 +65,47 @@ const productTagService = {
       }
     }
   },
-  findById: (id: string) => {
+  getById: (id: string) => {
     return prisma.productTag.findUnique({
       where: {
         id,
       }
     })
+  },
+  getOptions: async (query: GetSearchOptions) => {
+    const {
+      search,
+      limit = 10,
+    } = query
+
+    const options = await prisma.productTag.findMany({
+      where: {
+        status: "ACTIVE",
+        ...(search
+          ? {
+            name: {
+              contains: search,
+              mode: "insensitive"
+            }
+          } : {}
+        )
+      },
+      select: {
+        id: true,
+        name: true
+      },
+      orderBy: {
+        createdAt: "desc"
+      },
+      take: Math.min(limit, 50)
+    })
+
+    const result = options.map((item) => ({
+      value: item.id,
+      label: item.name
+    }))
+
+    return result
   },
   update: (id: string, data: UpdateProductTag) => {
     const validated = productTagSchema.update.parse(data)
