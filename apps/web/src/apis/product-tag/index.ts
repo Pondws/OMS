@@ -1,7 +1,7 @@
-import { PaginationType, ProductTagType } from "types"
+import { GetSearchOptions, PaginationType, ProductTagType } from "types"
 import { axios } from 'utils'
 
-const PREFIX_PRODUCT_TAG = '/product-tag'
+const PREFIX_PRODUCT_TAG = '/product-tags'
 
 export const productTagApi = {
   getAll: async (params?: PaginationType) => {
@@ -17,6 +17,15 @@ export const productTagApi = {
   getByID: async (id: string) => {
     const res = await axios.get(`${PREFIX_PRODUCT_TAG}/${id}`)
     return res?.data?.data
+  },
+  getOptions: async (query: GetSearchOptions) => {
+    const res = await axios.get(
+      `${PREFIX_PRODUCT_TAG}/options`,
+      {
+        params: query,
+      }
+    )
+    return res?.data
   },
   update: async (id: string, data: ProductTagType.ProductTagForm) => {
     const res = await axios.put(`${PREFIX_PRODUCT_TAG}/${id}`, data)

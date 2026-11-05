@@ -2,6 +2,7 @@ import { Request, Response } from "express"
 import productCategoryService from "./product-category.service"
 import { asyncHandler } from "../../middlewares/async-handler"
 import productCategorySchema from "./product-category.schema"
+import { getSearchOptionsSchema } from "../../shard/schemas/get-search-options"
 
 const productCategoryController = {
   create: asyncHandler(async (req: Request, res: Response) => {
@@ -25,6 +26,13 @@ const productCategoryController = {
 
     res.json(result)
   }),
+  getOptions: asyncHandler(async (req, res) => {
+    const query = getSearchOptionsSchema.parse(req.query)
+
+    const data = await productCategoryService.getOptions(query)
+
+    res.json(data)
+  }),
   update: asyncHandler(async (req, res) => {
     const { id } = productCategorySchema.params.parse(req.params)
 
@@ -44,7 +52,7 @@ const productCategoryController = {
     res.json({
       message: "ลบหมวดหมู่สินค้าเรียบร้อย"
     }) 
-  })
+  }),
 }
 
 export default productCategoryController

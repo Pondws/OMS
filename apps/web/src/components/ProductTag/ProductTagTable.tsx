@@ -56,8 +56,6 @@ function ProductTagTableComp() {
     control,
   })
 
-  console.log("value", value)
-
   const apiValue = omitBy(value, Helper.omitEmptyField)
 
   const {

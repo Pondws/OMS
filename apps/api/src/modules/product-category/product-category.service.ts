@@ -1,6 +1,12 @@
 import { prisma } from "../../lib/prisma"
+import { GetSearchOptions } from "../../shard/schemas/get-search-options"
 import { getPagination, getPaginationMeta } from "../../utils/pagination"
-import { CreateProductCategory, GetProductCategory, UpdateProductCategory } from "./product-category.type"
+import {
+  CreateProductCategory,
+  GetProductCategory,
+  UpdateProductCategory,
+  GetProductCategoryOptions
+} from "./product-category.type"
 
 const productCategoryService = {
   create: (payload: CreateProductCategory) => {
@@ -70,6 +76,41 @@ const productCategoryService = {
         id
       }
     })
+
+    return result
+  },
+  getOptions: async (query: GetSearchOptions) => {
+    const {
+      search,
+      limit = 10
+    } = query
+
+    const options = await prisma.productCategory.findMany({
+      where: {
+        status: "ACTIVE",
+        ...(search
+          ? {
+            name: {
+              contains: search,
+              mode: "insensitive"
+            }
+          } : {}
+        ),
+      },
+      select: {
+        id: true,
+        name: true
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: Math.min(limit, 50),
+    })
+
+    const result = options.map((item) => ({
+      value: item.id,
+      label: item.name,
+    }))
 
     return result
   },
