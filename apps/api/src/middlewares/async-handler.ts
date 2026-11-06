@@ -1,14 +1,6 @@
-import {
-  RequestHandler,
-  ParamsDictionary,
-} from "express-serve-static-core"
+import { RequestHandler } from "express"
 
-export const asyncHandler = <
-  P extends ParamsDictionary = ParamsDictionary,
->(
-  fn: RequestHandler<P>,
-): RequestHandler<P> => {
-  return (req, res, next) => {
+export const asyncHandler = (fn: RequestHandler): RequestHandler =>
+  (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next)
-  }
 }

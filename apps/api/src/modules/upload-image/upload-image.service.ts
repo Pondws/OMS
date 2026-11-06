@@ -1,29 +1,30 @@
+import { randomUUID } from "crypto"
 import { supabase } from "../../lib/supabase"
-import { ImageFolderType } from './upload-image.type'
 
-export const uploadImage = async (
-  file: Express.Multer.File,
-  folder: ImageFolderType // folder in supabase storage /images/{folder}/{file}
+const BUCKET = "images"
+
+export const uploadImageService = async (
+  files: Express.Multer.File[],
+  folder: string
 ) => {
-  const filePath = `${folder}/${crypto.randomUUID}-${file.originalname}`
+  const results = []
 
-  const { data, error } = await supabase.storage
-    .from("images")
-    .upload(filePath, file.buffer, {
-      contentType: file.mimetype,
-      upsert: false
-    })
+  for (const file of files) {
+    const ext = file.originalname.split(".").pop()
+    const path = `${folder}/${randomUUID()}.${ext}`
 
-  if (error) {
-    throw error
+    console.log("SUPABASE_URL =", JSON.stringify(process.env.SUPABASE_URL))
+    console.log("path =", path)
+
+    const { error } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, file.buffer, { contentType: file.mimetype })
+
+    if (error) throw error
+
+    const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+    results.push({ url: data.publicUrl, path })
   }
 
-  const { data: publicUrl } = supabase.storage
-    .from("images")
-    .getPublicUrl(data.path)
-
-  return {
-    path: data.path,
-    url: publicUrl
-  }
+  return results
 }
