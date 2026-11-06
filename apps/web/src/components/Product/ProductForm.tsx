@@ -32,10 +32,8 @@ const optionSchema = z.object({
 const schema = z.object({
   name: z.string().trim().min(1, "กรุณากรอกชื่อสินค้า"),
   status: z.enum(["ACTIVE", "INACTIVE"]),
-  productCategory: optionSchema
-    .nullable(),
-  // .refine((v) => v !== null, "กรุณาเลือกหมวดหมู่สินค้า"),
-  productTags: z.array(optionSchema), // add .min(1, "...") if it's required
+  productCategory: optionSchema.nullable(),
+  productTags: z.array(optionSchema),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -49,7 +47,6 @@ const defaultValues: FormValues = {
 
 function ProductFormComp(props: { id?: string }) {
   const { id } = props
-
   const router = useRouter()
   const queryClient = useQueryClient()
 
@@ -204,7 +201,6 @@ function ProductFormComp(props: { id?: string }) {
               />
             )}
           />
-
         </div>
       </CardBody>
     </div>
