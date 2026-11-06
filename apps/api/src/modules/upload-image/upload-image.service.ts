@@ -13,9 +13,6 @@ export const uploadImageService = async (
     const ext = file.originalname.split(".").pop()
     const path = `${folder}/${randomUUID()}.${ext}`
 
-    console.log("SUPABASE_URL =", JSON.stringify(process.env.SUPABASE_URL))
-    console.log("path =", path)
-
     const { error } = await supabase.storage
       .from(BUCKET)
       .upload(path, file.buffer, { contentType: file.mimetype })
