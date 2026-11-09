@@ -57,6 +57,8 @@ model ProductTag {
   status    Status   @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  products Product[]
 }
 
 model ProductCategory {
@@ -65,6 +67,8 @@ model ProductCategory {
   status    Status   @default(ACTIVE)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  products Product[]
 }
 
 model ProductVariant {
@@ -74,8 +78,9 @@ model ProductVariant {
 
   variants Variant[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  productOptions ProductOption[]
 }
 
 model Variant {
@@ -90,4 +95,44 @@ model Variant {
   updatedAt DateTime @updatedAt
 
   @@unique([productVariantId, name])
+}
+
+model Product {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+  status      Status  @default(ACTIVE)
+
+  categoryId String          @db.Uuid
+  category   ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  tags       ProductTag[]
+
+  options ProductOption[]
+  sku     ProductSku[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model ProductOption {
+  id        String @id @default(uuid()) @db.Uuid
+  sortOrder Int    @default(0)
+
+  productId        String         @db.Uuid
+  product          Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVariantId String         @db.Uuid
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
+
+  @@unique([productId, productVariantId])
+}
+
+model ProductSku {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @db.Uuid
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku   String
+  price Decimal @db.Decimal(12, 2)
 }
