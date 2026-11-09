@@ -1,5 +1,6 @@
 import crypto from "node:crypto"
 import bcrypt from 'bcrypt'
+import { Prisma } from "../../../generated/prisma/client"
 
 import JWTGenerate from '../../lib/jwt'
 import authSchema from './auth.schema'
@@ -10,6 +11,7 @@ import {
   LoginInput,
   RefreshInput
 } from './auth.types'
+import { AppError } from "../../errors/app-error"
 
 const REFRESH_TOKEN_EXPIRES_IN = 7 * 24 * 60 * 60 * 1000
 
@@ -22,50 +24,52 @@ const hashToken = (token: string) => {
 
 const authService = {
   register: async (user: RegisterInput) => {
-    const validated = authSchema.register.parse(user)
+    try {
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.email }
+      })
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email: validated.email }
-    })
-
-    if (existingUser) {
-      throw new Error("มีผู้ใช้ในระบบแล้ว")
-    }
-
-    const hashedPassword = await bcrypt.hash(validated.password, 12)
-
-    const newUser = await prisma.user.create({
-      data: {
-        email: validated.email,
-        password: hashedPassword,
-        name: validated.name,
-      },
-
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true
+      if (existingUser) {
+        throw new Error("มีผู้ใช้ในระบบแล้ว")
       }
-    })
 
-    return newUser
+      const hashedPassword = await bcrypt.hash(user.password, 12)
+
+      return await prisma.user.create({
+        data: {
+          email: user.email,
+          password: hashedPassword,
+          name: user.name,
+        },
+
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true
+        }
+      })
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        throw new AppError(409, "มีผู้ใช้ในระบบแล้ว")
+      }
+      throw error
+    }
   },
   login: async (data: LoginInput) => {
-    const validated = authSchema.login.parse(data)
-
     const user = await prisma.user.findUnique({
-      where: { email: validated.email }
+      where: { email: data.email }
     })
 
-    if (!user) {
-      throw new Error("อีเมล์หรือรหัสผ่านไม่ถูกต้อง")
-    }
+    const DUMMY_HASH = "847df5a8d8d01e02af96786efbc10585e47c46223700894077ed5e8d31c39543"
 
-    const match = await bcrypt.compare(validated.password, user.password)
+    const match = await bcrypt.compare(data.password, user?.password ?? DUMMY_HASH)
 
-    if (!match) {
-      throw new Error("อีเมล์หรือรหัสผ่านไม่ถูกต้อง")
+    if (!user || !match) {
+      throw new AppError(401, "อีเมล์หรือรหัสผ่านไม่ถูกต้อง")
     }
 
     const accessToken = JWTGenerate.accessToken({
@@ -101,56 +105,47 @@ const authService = {
     }
   },
   refresh: async (data: RefreshInput) => {
-    const validated = authSchema.refresh.parse(data)
-
-    const tokenHash = hashToken(validated.refreshToken)
+    const tokenHash = hashToken(data.refreshToken)
 
     const storedToken = await prisma.refreshToken.findUnique({
-      where: {
-        tokenHash
-      },
-
-      include: {
-        user: true
-      }
+      where: { tokenHash },
+      include: { user: true }
     })
 
     if (!storedToken) {
-      throw new Error("Invalid refresh token")
+      throw new AppError(401, "Invalid refresh token")
     }
 
     if (storedToken.revokedAt) {
-      throw new Error("Refresh token has been revoked")
+      await prisma.refreshToken.updateMany({
+        where: {
+          userId: storedToken.userId,
+          revokedAt: null
+        },
+        data: { revokedAt: new Date() }
+      })
+      throw new AppError(401, "Refresh token has been revoked")
     }
 
     if (storedToken.expiresAt < new Date()) {
-      throw new Error("Refresh token has expired")
+      throw new AppError(401, "Refresh token has expired")
     }
 
     const user = storedToken.user
-
-    const accessToken = JWTGenerate.accessToken({
-      id: user.id,
-      email: user.email,
-      role: user.role
-    })
-
     const newRefreshToken = crypto.randomBytes(64).toString("hex")
-
     const newTokenHash = hashToken(newRefreshToken)
 
-    await prisma.$transaction([
-      prisma.refreshToken.update({
-        where: {
-          id: storedToken.id,
-        },
+    await prisma.$transaction(async (tx) => {
+      const revoke = await tx.refreshToken.updateMany({
+        where: { id: storedToken.id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      })
 
-        data: {
-          revokedAt: new Date()
-        }
-      }),
+      if (revoke.count === 0) {
+        throw new AppError(401, "Refresh token has already been used")
+      }
 
-      prisma.refreshToken.create({
+      await tx.refreshToken.create({
         data: {
           tokenHash: newTokenHash,
           userId: user.id,
@@ -160,7 +155,13 @@ const authService = {
           ),
         }
       })
-    ])
+    })
+
+    const accessToken = JWTGenerate.accessToken({
+      id: user.id,
+      email: user.email,
+      role: user.role
+    })
 
     return {
       accessToken,
@@ -180,6 +181,19 @@ const authService = {
         revokedAt: new Date()
       }
     })
+  },
+  cleanupExpiredTokens: async () => {
+    const now = Date.now()
+
+    const result = await prisma.refreshToken.deleteMany({
+      where: {
+        OR: [
+          { expiresAt: { lt: new Date(now) } },
+        ]
+      }
+    })
+
+    return result.count
   }
 }
 

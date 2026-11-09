@@ -1,4 +1,4 @@
-import type { AuthUser } from "../modules/auth/auth.types"
+import { AuthUser } from "../modules/auth/auth.types"
 
 declare global {
   namespace Express {

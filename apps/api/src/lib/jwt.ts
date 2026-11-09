@@ -1,27 +1,26 @@
-import jwt from 'jsonwebtoken'
+import jwt, { JwtPayload, SignOptions, VerifyOptions } from "jsonwebtoken"
+import { AuthUser } from "../modules/auth/auth.types"
 
-type JWTPayload = {
-  id: string
-  email: string
-  role: string
+const secret = process.env.JWT_ACCESS_SECRET
+if (!secret) throw new Error("JWT_ACCESS_SECRET is not set")
+
+const signOptions: SignOptions = {
+  algorithm: "HS256",
+  expiresIn: "15m",
+}
+
+const verifyOptions: VerifyOptions = {
+  algorithms: ["HS256"],
 }
 
 const JWTGenerate = {
-  accessToken: (payload: JWTPayload) => {
-    return jwt.sign(
-      payload,
-      process.env.JWT_ACCESS_SECRET!,
-      {
-        expiresIn: "15m"
-      }
-    )
+  accessToken: (payload: AuthUser): string => {
+    return jwt.sign(payload, secret, signOptions)
   },
-  verifyAccessToken: (token: string) => {
-    return jwt.verify(
-      token,
-      process.env.JWT_ACCESS_SECRET!
-    )
-  }
+
+  verifyAccessToken: (token: string): string | JwtPayload => {
+    return jwt.verify(token, secret, verifyOptions)
+  },
 }
 
 export default JWTGenerate
