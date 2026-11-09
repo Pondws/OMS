@@ -1,8 +1,11 @@
 import {
   Request,
-  Response
+  Response,
+  CookieOptions,
+  NextFunction
 } from "express"
 import authService from "./auth.service"
+import authSchema from "./auth.schema"
 
 const ACCESS_TOKEN_MAX_AGE =
   15 * 60 * 1000
@@ -10,130 +13,79 @@ const ACCESS_TOKEN_MAX_AGE =
 const REFRESH_TOKEN_MAX_AGE =
   7 * 24 * 60 * 60 * 1000
 
-const cookieOptions = {
+const cookieOptions: CookieOptions = {
   httpOnly: true,
   // secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
+  sameSite: "lax",
+}
+
+const accessCookie: CookieOptions = {
+  ...cookieOptions,
+  path: "/",
+}
+
+const refreshCookie: CookieOptions = {
+  ...cookieOptions,
+  path: "/auth",
+}
+
+const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+  res.cookie("accessToken", accessToken, { ...accessCookie, maxAge: ACCESS_TOKEN_MAX_AGE })
+  res.cookie("refreshToken", refreshToken, { ...refreshCookie, maxAge: REFRESH_TOKEN_MAX_AGE })
+}
+
+const clearAuthCookies = (res: Response) => {
+  res.clearCookie("accessToken", accessCookie)
+  res.clearCookie("refreshToken", refreshCookie)
 }
 
 const AuthController = {
-  register: async (req: Request, res: Response) => {
+  register: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await authService.register(req.body)
-      res.status(200).json({ message: "สมัครสมาชิกเรียบร้อย" })
+      const body = authSchema.register.parse(req.body)
+      await authService.register(body)
+      return res.status(201).json({ message: "สมัครสมาชิกเรียบร้อย" })
     } catch (error) {
-      res.status(400).json({
-        message: 'เกิดข้อผิดพลาด'
-      })
+      next(error)
     }
   },
-  login: async (req: Request, res: Response) => {
+  login: async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const result = await authService.login(req.body)
-
-      res.cookie(
-        "accessToken",
-        result.accessToken,
-        {
-          ...cookieOptions,
-          maxAge: ACCESS_TOKEN_MAX_AGE
-        }
-      )
-
-      res.cookie(
-        "refreshToken",
-        result.refreshToken,
-        {
-          ...cookieOptions,
-          maxAge: REFRESH_TOKEN_MAX_AGE
-        }
-      )
-
-      return res.status(200).json({
-        data: {
-          user: result.user
-        }
-      })
+      const body = authSchema.login.parse(req.body)
+      const result = await authService.login(body)
+      setAuthCookies(res, result.accessToken, result.refreshToken)
+      return res.status(200).json({ data: { user: result.user } })
     } catch (error) {
-      res.status(400).json({
-        message: 'เกิดข้อผิดพลาด'
-      })
+      next(error)
     }
   },
-  refresh: async (req: Request, res: Response) => {
+  refresh: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const refreshToken = req.cookies.refreshToken
-
       if (!refreshToken) {
-        return res.status(401).json({
-          message: "ไม่พบ Refresh token",
-        })
+        return res.status(401).json({ message: "ไม่พบ Refresh token" })
       }
 
       const result = await authService.refresh({ refreshToken })
-
-      res.cookie(
-        "accessToken",
-        result.accessToken,
-        {
-          ...cookieOptions,
-          maxAge:
-            ACCESS_TOKEN_MAX_AGE,
-        }
-      )
-
-      res.cookie(
-        "refreshToken",
-        result.refreshToken,
-        {
-          ...cookieOptions,
-          maxAge:
-            REFRESH_TOKEN_MAX_AGE,
-        }
-      )
-
-      return res.status(200).json({
-        message: "Token refreshed",
-      })
+      setAuthCookies(res, result.accessToken, result.refreshToken)
+      return res.status(200).json({ message: "Token refreshed" })
     } catch (error) {
-      return res.status(401).json({
-        message:
-          error instanceof Error
-            ? error.message
-            : "เกิดข้อผิดพลาด",
-      })
+      clearAuthCookies(res)   // token ใช้ไม่ได้แล้ว ล้างทิ้งด้วย
+      next(error)
     }
   },
-  logout: async (req: Request, res: Response) => {
+  logout: async (req: Request, res: Response, _: NextFunction) => {
     try {
-      const refreshToken =
-        req.cookies.refreshToken
-
+      const refreshToken = req.cookies.refreshToken
       if (refreshToken) {
-        await authService.logout(
-          refreshToken
-        )
+        await authService.logout(refreshToken)
       }
-
-      res.clearCookie(
-        "accessToken",
-        cookieOptions
-      )
-
-      res.clearCookie(
-        "refreshToken",
-        cookieOptions
-      )
-
-      return res.status(200).json({
-        message:
-          "ออกจากระบบเรียบร้อย",
-      })
     } catch (error) {
-      res.status(400).json({
-        message: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด'
-      })
+      console.error(error)
+    } finally {
+      clearAuthCookies(res)
     }
+    return res.status(200).json({ message: "ออกจากระบบเรียบร้อย" })
   },
 }
 

@@ -5,7 +5,6 @@ import {
 } from "express"
 
 import JWTGenerate from "../lib/jwt"
-import { AuthUser } from "../modules/auth/auth.types"
 
 const authMiddleware = (
   req: Request,
@@ -23,7 +22,10 @@ const authMiddleware = (
 
     const payload = JWTGenerate.verifyAccessToken(token)
 
-    req.user = payload as AuthUser
+    if (typeof payload === "string" || !payload.id || !payload.role) {
+      return res.status(401).json({ message: "Invalid token" })
+    }
+    req.user = { id: payload.id, email: payload.email, role: payload.role }
 
     next()
   } catch (error) {

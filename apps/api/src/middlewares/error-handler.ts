@@ -1,15 +1,27 @@
 import { ErrorRequestHandler } from "express"
+import { ZodError } from "zod"
+import { AppError } from "../errors/app-error"
 
-export const errorHandler:ErrorRequestHandler = (
+export const errorHandler: ErrorRequestHandler = (
   err,
   req,
   res,
   next
 ) => {
-  const statusCode = err.statusCode ?? 500
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      message: "ข้อมูลไม่ถูกต้อง",
+      errors: err.issues.map((i) => ({
+        field: i.path.join("."),
+        message: i.message,
+      })),
+    })
+  }
 
-  res.status(statusCode).json({
-    success: false,
-    message: err.message ?? "Internal Server Error",
-  })
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({ message: err.message })
+  }
+
+  console.error(err)
+  return res.status(500).json({ message: "เกิดข้อผิดพลาด" })
 }
