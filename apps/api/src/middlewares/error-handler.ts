@@ -6,7 +6,7 @@ export const errorHandler: ErrorRequestHandler = (
   err,
   req,
   res,
-  next
+  next,
 ) => {
   if (err instanceof ZodError) {
     return res.status(400).json({

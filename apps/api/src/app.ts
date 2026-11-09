@@ -7,6 +7,7 @@ import userRoute from './modules/user/user.route'
 import productTagRoute from './modules/product-tag/product-tag.route'
 import productCategoryRoute from './modules/product-category/product-category.route'
 import productVariantRoute from './modules/product-variant/product-variant.route'
+import uploadImageRoute from './modules/upload-image/upload-image.route'
 import { errorHandler } from './middlewares/error-handler'
 
 const app = express()
@@ -21,6 +22,7 @@ app.use(cookieParser())
 
 app.use('/auth', authRoute)
 app.use(userRoute)
+app.use('/', uploadImageRoute)
 app.use('/product-categories', productCategoryRoute)
 app.use('/product-tags', productTagRoute)
 app.use('/product-variants', productVariantRoute)
