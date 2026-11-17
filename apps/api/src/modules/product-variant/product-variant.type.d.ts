@@ -13,6 +13,6 @@ export type GetProductVariant = z.infer<
   typeof productVariantSchema.get
 >
 
-// export type GetProductCategoryOptions = z.infer<
-//   typeof productCategorySchema.getOptions
-// >
+export type GetProductVariantOptions = z.infer<
+  typeof productVariantSchema.getOptions
+>
