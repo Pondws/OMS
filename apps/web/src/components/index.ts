@@ -11,8 +11,10 @@ export * from './DataTable'
 export * from './Autocomplete'
 export * from './Select'
 export * from './Sortable'
+export * from './ImageUpload'
 
 export * from './ProductTag'
 export * from './ProductVariant'
 export * from './ProductCategory'
 export * from './Product'
+
