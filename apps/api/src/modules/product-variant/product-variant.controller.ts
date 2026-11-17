@@ -25,13 +25,13 @@ const productVariantController = {
 
     res.json(result)
   }),
-  // getOptions: asyncHandler(async (req, res) => {
-  //   const query = productCategorySchema.getOptions.parse(req.query)
+  getOptions: asyncHandler(async (req, res) => {
+    const query = productVariantSchema.getOptions.parse(req.query)
 
-  //   const data = await productCategoryService.getOptions(query)
+    const data = await productVariantService.getOptions(query)
 
-  //   res.json(data)
-  // }),
+    res.json(data)
+  }),
   // update: asyncHandler(async (req, res) => {
   //   const { id } = productCategorySchema.params.parse(req.params)
 

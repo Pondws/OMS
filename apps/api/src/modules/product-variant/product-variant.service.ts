@@ -4,7 +4,7 @@ import {
   CreateProductVariant,
   GetProductVariant,
   // UpdateProductCategory,
-  // GetProductCategoryOptions
+  GetProductVariantOptions
 } from "./product-variant.type"
 
 const productVariantService = {
@@ -113,34 +113,45 @@ const productVariantService = {
 
     return result
   },
-  // getOptions: async (query: GetProductCategoryOptions) => {
-  //   const { search } = query
+  getOptions: async (query: GetProductVariantOptions) => {
+    const { search } = query
 
-  //   const result = await prisma.productCategory.findMany({
-  //     where:  {
-  //     status: "ACTIVE",
-  //     ...(search
-  //       ? {
-  //         name: {
-  //           contains: search,
-  //           mode: "insensitive"
-  //         }
-  //       }
-  //       : {}
-  //     )
-  //   },
-  //     select: {
-  //       id: true,
-  //       name: true
-  //     },
-  //     orderBy: {
-  //       name: "asc",
-  //     },
-  //     take: 10
-  //   })
+    const options = await prisma.productVariant.findMany({
+      where: {
+        status: "ACTIVE",
+        ...(search
+          ? {
+            name: {
+              contains: search,
+              mode: "insensitive"
+            }
+          }
+          : {}
+        )
+      },
+      select: {
+        id: true,
+        name: true,
+        variants: {
+          select: {
+            id: true,
+            name: true
+          },
+          orderBy: { sortOrder: "asc" }
+        }
+      },
+      orderBy: { name: "asc", },
+      take: 10
+    })
 
-  //   return result
-  // },
+    const result = options.map((item) => ({
+      value: item.id,
+      label: item.name,
+      variants: item.variants
+    }))
+
+    return result
+  },
   // update: (id: string, payload: UpdateProductCategory) => {
   //   return prisma.productCategory.update({
   //     where: {
