@@ -70,7 +70,7 @@ const AuthController = {
       setAuthCookies(res, result.accessToken, result.refreshToken)
       return res.status(200).json({ message: "Token refreshed" })
     } catch (error) {
-      clearAuthCookies(res)   // token ใช้ไม่ได้แล้ว ล้างทิ้งด้วย
+      clearAuthCookies(res)
       next(error)
     }
   },

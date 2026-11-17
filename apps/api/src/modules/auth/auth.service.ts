@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt'
 import { Prisma } from "../../../generated/prisma/client"
 
 import JWTGenerate from '../../lib/jwt'
-import authSchema from './auth.schema'
 
 import { prisma } from '../../lib/prisma'
 import {
