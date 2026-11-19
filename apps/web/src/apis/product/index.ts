@@ -8,7 +8,7 @@ export const productApi = {
     const res = await axios.get(PREFIX_PRODUCT, {
       params
     })
-    return res?.data
+    return res?.data?.data
   },
   create: async (data: ProductVariantType.ProductVariantForm) => {
     const res = await axios.post(PREFIX_PRODUCT, data)

@@ -19,6 +19,11 @@ enum Role {
   VIEWER
 }
 
+enum ProductVariantType {
+  TEXT
+  CIRCLE
+}
+
 enum Status {
   ACTIVE
   INACTIVE
@@ -72,9 +77,10 @@ model ProductCategory {
 }
 
 model ProductVariant {
-  id     String @id @default(uuid()) @db.Uuid
-  name   String @unique
-  status Status @default(ACTIVE)
+  id     String             @id @default(uuid()) @db.Uuid
+  name   String             @unique
+  status Status             @default(ACTIVE)
+  type   ProductVariantType @default(TEXT)
 
   variants Variant[]
 
@@ -84,10 +90,11 @@ model ProductVariant {
 }
 
 model Variant {
-  id               String @id @default(uuid()) @db.Uuid
+  id               String  @id @default(uuid()) @db.Uuid
   name             String
-  sortOrder        Int    @default(0)
-  productVariantId String @db.Uuid
+  colorHex         String?
+  sortOrder        Int     @default(0)
+  productVariantId String  @db.Uuid
 
   productVariant ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
 
