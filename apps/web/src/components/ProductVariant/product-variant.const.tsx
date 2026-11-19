@@ -1,53 +1,18 @@
-import { ALERT_TEXT } from 'consts'
-import { AlertTextType, ProductTagType } from 'types'
-import { ColumnDef, createColumnHelper } from "@tanstack/react-table"
-import { format } from 'date-fns'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-  Button
-} from 'components'
-import { EllipsisVertical, SquarePen, Trash } from "lucide-react"
-import { type DataTableFeatures } from "components"
+import { ALERT_TEXT } from "consts"
+import { AlertTextType } from "types"
 
-const defaultName = 'ตัวเลือกสินค้า'
-const defaultPaht = 'product-variant'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const columnHelper = createColumnHelper<DataTableFeatures, any>()
+const NAME = "ตัวเลือกสินค้า"
+const PATH = "product-variant"
 
 export const PRODUCT_VARIANT = {
-  name: defaultName,
-  text: (
-    action: AlertTextType.ActionProps,
-    status?: AlertTextType.StatusProps
-  ) =>
-    status
-      ? `${ALERT_TEXT.action[action]}${defaultName}${ALERT_TEXT.status[status]}`
-      : `${ALERT_TEXT.action[action]}${defaultName}`,
-  path: (
-    action?: AlertTextType.PathProps
-  ) => action ? `/${defaultPaht}/${action}` : `/${defaultPaht}`,
-  columns: columnHelper.columns([
-    columnHelper.accessor("name", {
-      header: "ชื่อหมวดหมู่สินค้า",
-    }),
-    columnHelper.accessor("createdAt", {
-      header: "วันที่สร้าง",
-      cell: info => {
-        const { updatedAt } = info.row.original
-        return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
-      },
-    }),
-    columnHelper.accessor("updatedAt", {
-      header: "วันที่อัปเดต",
-      cell: info => {
-        const { updatedAt } = info.row.original
-        return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
-      },
-    }),
-  ])
+  name: NAME,
+  queryKey: {
+    all: [PATH] as const,
+    list: (params: object) => [PATH, "list", params] as const,
+    detail: (id: string) => [PATH, "detail", id] as const,
+  },
+  text: (action: AlertTextType.ActionProps, status?: AlertTextType.StatusProps) =>
+    `${ALERT_TEXT.action[action]}${NAME}${status ? ALERT_TEXT.status[status] : ""}`,
+  path: (action?: AlertTextType.PathProps) => (action ? `/${PATH}/${action}` : `/${PATH}`),
+  detailPath: (id: string) => `/${PATH}/${id}`,
 }

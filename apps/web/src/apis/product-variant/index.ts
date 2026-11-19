@@ -22,7 +22,7 @@ export const productVariantApi = {
     const res = await axios.put(`${PREFIX_PRODUCT_VARIANT}/${id}`, data)
     return res?.data?.data
   },
-  deleteByID: async (id: string) => {
+  delete: async (id: string) => {
     const res = await axios.delete(`${PREFIX_PRODUCT_VARIANT}/${id}`)
     return res?.data?.data
   },
