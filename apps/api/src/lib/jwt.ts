@@ -6,7 +6,7 @@ if (!secret) throw new Error("JWT_ACCESS_SECRET is not set")
 
 const signOptions: SignOptions = {
   algorithm: "HS256",
-  expiresIn: "15m",
+  expiresIn: "1d",
 }
 
 const verifyOptions: VerifyOptions = {

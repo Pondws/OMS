@@ -1,13 +1,13 @@
 
 import { Router } from "express"
-import authorization from "../../middlewares/auth.middleware"
+import { authenticate } from "../../middlewares/auth.middleware"
 import UserController from "./user.controller"
 
 const router = Router()
 
 router.get(
   "/me",
-  authorization,
+  authenticate,
   UserController.getMe
 )
 

@@ -24,6 +24,7 @@ const productVariantService = {
             create: options.map((variant, index) => (
               {
                 name: variant.name,
+                colorHex: variant.colorHex || null,
                 sortOrder: index + 1
               }
             ))
@@ -135,7 +136,8 @@ const productVariantService = {
         variants: {
           select: {
             id: true,
-            name: true
+            name: true,
+            colorHex: true
           },
           orderBy: { sortOrder: "asc" }
         }
@@ -147,7 +149,7 @@ const productVariantService = {
     const result = options.map((item) => ({
       value: item.id,
       label: item.name,
-      variants: item.variants
+      data: item
     }))
 
     return result

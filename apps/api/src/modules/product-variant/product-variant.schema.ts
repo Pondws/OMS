@@ -7,7 +7,8 @@ const productVariantSchema = {
     status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
     options: z.array(
       z.object({
-        name: z.string().trim().min(1).max(100)
+        name: z.string().trim().min(1).max(100),
+        colorHex: z.string().nullable()
       })
     ).min(1)
   }),

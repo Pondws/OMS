@@ -5,7 +5,6 @@ import {
   CreateProductCategory,
   GetProductCategory,
   UpdateProductCategory,
-  GetProductCategoryOptions
 } from "./product-category.type"
 
 const productCategoryService = {

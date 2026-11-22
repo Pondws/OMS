@@ -21,24 +21,23 @@ import { Label } from "@/components/ui/label"
 import { InputGroupButton } from '@/components/ui/input-group'
 import { useDebounce } from "hooks"
 
-export type AutocompleteOption = {
+export type AutocompleteOption<TData = unknown> = {
   value: string
   label: string
+  data?: TData
   disabled?: boolean
   description?: string
 }
 
-type OptionsLoader = (
-  search: string
-) => AutocompleteOption[] | Promise<AutocompleteOption[]>
+type OptionsLoader<TData> = (search: string) => AutocompleteOption<TData>[] | Promise<AutocompleteOption<TData>[]>
 
-type BaseProps = {
+type BaseProps<TData> = {
   label?: string
   /**
    * - Array    → const options, filtered in the browser
    * - Function → API search, called with the (debounced) search text
    */
-  options: AutocompleteOption[] | OptionsLoader
+  options: AutocompleteOption<TData>[] | OptionsLoader<TData>
   /** Hide these values from the list */
   exclude?: string[]
   placeholder?: string
@@ -53,26 +52,26 @@ type BaseProps = {
   debounceMs?: number
 }
 
-type SingleProps = BaseProps & {
+type SingleProps<TData> = BaseProps<TData> & {
   multiple?: false
-  value?: AutocompleteOption | null
+  value?: AutocompleteOption<TData> | null
   onChange?: (value: AutocompleteOption | null) => void
 }
 
-type MultipleProps = BaseProps & {
+type MultipleProps<TData> = BaseProps<TData> & {
   multiple: true
-  value?: AutocompleteOption[]
-  onChange?: (value: AutocompleteOption[]) => void
+  value?: AutocompleteOption<TData>[]
+  onChange?: (value: AutocompleteOption<TData>[]) => void
 }
 
-export type AutocompleteProps = SingleProps | MultipleProps
+export type AutocompleteProps<TData = unknown> = SingleProps<TData> | MultipleProps<TData>
 
 const isSameOption = (a: AutocompleteOption, b: AutocompleteOption) =>
   a.value === b.value
 const getLabel = (item: AutocompleteOption) => item.label
 const getValue = (item: AutocompleteOption) => item.value
 
-export function Autocomplete(props: AutocompleteProps) {
+export function Autocomplete<TData = unknown>(props: AutocompleteProps<TData>) {
   const {
     label,
     options,
@@ -99,12 +98,12 @@ export function Autocomplete(props: AutocompleteProps) {
   // API search: React Query handles caching, race conditions & loading state
   const query = useQuery({
     queryKey: ["autocomplete", id, debouncedSearch],
-    queryFn: () => (options as OptionsLoader)(debouncedSearch),
+    queryFn: () => (options as OptionsLoader<TData>)(debouncedSearch),
     enabled: isAsync && open,
     placeholderData: keepPreviousData, // keep old list while typing
   })
 
-  const items = (isAsync ? (query.data ?? []) : options).filter(
+  const items: AutocompleteOption<TData>[] = (isAsync ? (query.data ?? []) : options).filter(
     (item) => !exclude.includes(item.value)
   )
   const isLoading = loading || query.isFetching
@@ -125,9 +124,9 @@ export function Autocomplete(props: AutocompleteProps) {
           if (details.reason === "escape-key") return details.cancel()
 
           if (props.multiple) {
-            props.onChange?.(Array.isArray(next) ? next : [])
+            props.onChange?.(Array.isArray(next) ? (next as AutocompleteOption<TData>[]) : [])
           } else {
-            props.onChange?.(Array.isArray(next) ? null : next)
+            props.onChange?.(Array.isArray(next) ? null : (next as AutocompleteOption<TData> | null))
           }
         }}
         onInputValueChange={(text, details) => {
@@ -148,7 +147,7 @@ export function Autocomplete(props: AutocompleteProps) {
         {props.multiple ? (
           <ComboboxChips ref={anchor} className={className}>
             <ComboboxValue>
-              {(selected: AutocompleteOption[]) => (
+              {(selected: AutocompleteOption<TData>[]) => (
                 <>
                   {selected.map((item) => (
                     <ComboboxChip key={item.value} showRemove={!disabled}>
@@ -186,7 +185,7 @@ export function Autocomplete(props: AutocompleteProps) {
           <ComboboxEmpty>{isLoading ? "Loading..." : emptyText}</ComboboxEmpty>
 
           <ComboboxList>
-            {(item: AutocompleteOption) => (
+            {(item: AutocompleteOption<TData>) => (
               <ComboboxItem key={item.value} value={item} disabled={item.disabled}>
                 <div>
                   <div>{item.label}</div>

@@ -1,14 +1,14 @@
 import { Router } from "express"
-import authorization from "../../middlewares/auth.middleware"
+import {authenticate} from "../../middlewares/auth.middleware"
 import productTagController from "./product-tag.controller"
 
 const router = Router()
 
-router.post("/", authorization, productTagController.create)
-router.get("/", authorization, productTagController.getAll)
-router.get("/options", authorization, productTagController.getOptions)
-router.get("/:id", authorization, productTagController.getById)
-router.put("/:id", authorization, productTagController.update)
-router.delete("/:id", authorization, productTagController.delete)
+router.post("/", authenticate, productTagController.create)
+router.get("/", authenticate, productTagController.getAll)
+router.get("/options", authenticate, productTagController.getOptions)
+router.get("/:id", authenticate, productTagController.getById)
+router.put("/:id", authenticate, productTagController.update)
+router.delete("/:id", authenticate, productTagController.delete)
 
 export default router

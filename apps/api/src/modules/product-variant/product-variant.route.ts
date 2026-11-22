@@ -1,14 +1,14 @@
 import { Router } from "express"
-import authorization from "../../middlewares/auth.middleware"
+import { authenticate } from "../../middlewares/auth.middleware"
 import productVariantController from "./product-variant.controller"
 
 const router = Router()
 
-router.post("/", authorization, productVariantController.create)
-router.get("/", authorization, productVariantController.getAll)
-router.get("/options", authorization, productVariantController.getOptions)
-router.get("/:id", authorization, productVariantController.getById)
-// router.put("/:id", authorization, productCategoryController.update)
-// router.delete("/:id", authorization, productCategoryController.delete)
+router.post("/", authenticate, productVariantController.create)
+router.get("/", authenticate, productVariantController.getAll)
+router.get("/options", authenticate, productVariantController.getOptions)
+router.get("/:id", authenticate, productVariantController.getById)
+// router.put("/:id", authenticate, productCategoryController.update)
+// router.delete("/:id", authenticate, productCategoryController.delete)
 
 export default router

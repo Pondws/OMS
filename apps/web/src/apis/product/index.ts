@@ -1,4 +1,4 @@
-import { PaginationType, ProductVariantType } from "types"
+import { PaginationType, ProductType } from "types"
 import { axios } from 'utils'
 
 const PREFIX_PRODUCT = '/products'
@@ -10,7 +10,7 @@ export const productApi = {
     })
     return res?.data?.data
   },
-  create: async (data: ProductVariantType.ProductVariantForm) => {
+  create: async (data: ProductType.ProductForm) => {
     const res = await axios.post(PREFIX_PRODUCT, data)
     return res?.data?.data
   },
@@ -18,7 +18,7 @@ export const productApi = {
     const res = await axios.get(`${PREFIX_PRODUCT}/${id}`)
     return res?.data?.data
   },
-  update: async (id: string, data: ProductVariantType.ProductVariantForm) => {
+  update: async (id: string, data: ProductType.ProductForm) => {
     const res = await axios.put(`${PREFIX_PRODUCT}/${id}`, data)
     return res?.data?.data
   },
