@@ -27,12 +27,7 @@ export const productVariantApi = {
     return res?.data?.data
   },
   getOptions: async (query: GetSearchOptions) => {
-    const res = await axios.get(
-      `${PREFIX_PRODUCT_VARIANT}/options`,
-      {
-        params: query,
-      }
-    )
+    const res = await axios.get(`${PREFIX_PRODUCT_VARIANT}/options`, { params: query })
     return res?.data
   },
 }

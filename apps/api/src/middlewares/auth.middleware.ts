@@ -6,7 +6,7 @@ import {
 
 import JWTGenerate from "../lib/jwt"
 
-const authMiddleware = (
+export const authenticate = (
   req: Request,
   res: Response,
   next: NextFunction
@@ -34,6 +34,3 @@ const authMiddleware = (
     })
   }
 }
-
-
-export default authMiddleware

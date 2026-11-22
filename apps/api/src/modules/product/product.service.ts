@@ -1,129 +1,106 @@
 import { prisma } from "../../lib/prisma"
-import { GetSearchOptions } from "../../shard/schemas/get-search-options"
-import productTagSchema from "./product.schema"
-import {
-  CreateProductTag,
-  UpdateProductTag
-} from "./product.type"
-import { z } from "zod"
-
-const paginationSchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-
-  dateType: z.enum(["createdAt", "updatedAt"]).default("createdAt"),
-  // startDate: z.coerce.date().optional(),
-  // endDate: z.coerce.date().optional(),
-})
+import { ProductBody } from "./product.schema"
 
 const productTagService = {
-  create: (data: CreateProductTag) => {
-    const validated = productTagSchema.create.parse(data)
+  create: async (body: ProductBody) => {
+    return prisma.$transaction(async (tx) => {
+      const categoryId = prisma.productCategory.findUnique({
+        where: { id: body.categoryId },
+        select: { id: true }
+      })
+      if (!categoryId) throw new Error("ไม่พบหมวดหมู่นี้")
 
-    return prisma.productTag.create({
-      data: validated
-    })
-  },
-  getAll: async (query: any) => {
-    const {
-      page,
-      limit,
-      dateType,
-      // startDate,
-      // endDate,
-    } = paginationSchema.parse(query)
-
-    const skip = (page - 1) * limit
-
-    // const filter = {
-    //   [dateType]: {
-    //     gte: startDate,
-    //     lte: endDate
-    //   }
-    // }
-
-    const [data, total] = await Promise.all([
-      prisma.productTag.findMany({
-        // where: filter,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" }
-      }),
-
-      prisma.productTag.count()
-    ])
-
-    const totalPages = Math.ceil(total / limit)
-
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages
+      const tagIds = [...new Set(body.tagIds)]
+      if (tagIds.length) {
+        const found = await tx.productTag.count({ where: { id: { in: tagIds } } })
+        if (found !== tagIds.length) throw new Error("มีแท็กที่ไม่มีอยู่จริง")
       }
-    }
-  },
-  getById: (id: string) => {
-    return prisma.productTag.findUnique({
-      where: {
-        id,
+
+      const productVariantIds = body.options.map((o) => o.productVariantId)
+      const productVariants = productVariantIds.length
+        ? await tx.productVariant.findMany({
+          where: { id: { in: productVariantIds }, status: "ACTIVE" },
+          select: { id: true, variants: { select: { id: true } } },
+        })
+        : []
+
+      if (productVariants.length !== productVariantIds.length) {
+        throw new Error("มีตัวเลือกสินค้าที่ไม่มีอยู่จริง หรือถูกปิดใช้งาน")
       }
+
+      const productVariantIdOf = new Map(
+        productVariants.flatMap((pv) => pv.variants.map((v) => [v.id, pv.id])),
+      )
+
+      body.skus.forEach((sku) => {
+        const skuProductVariantIds = sku.optionValueIds.map((id) => productVariantIdOf.get(id))
+        if (skuProductVariantIds.some((id) => !id)) {
+          throw new Error("มีค่าที่ไม่ได้อยู่ในตัวเลือกของสินค้านี้")
+        }
+        if (new Set(skuProductVariantIds).size !== productVariantIds.length) {
+          throw new Error("ต้องเลือกตัวเลือกละ 1 ค่า")
+        }
+      })
+
+      const used = new Set(body.skus.flatMap((s) => s.optionValueIds));
+      body.images.forEach((img) => {
+        if (img.optionValueId && !used.has(img.optionValueId)) {
+          throw new Error("ผูกกับค่าที่ไม่มี SKU ใช้");
+        }
+      })
+
+      return tx.product.create({
+        data: {
+          name: body.name,
+          slug: body.slug,
+          description: body.description ?? null,
+          status: body.status,
+          categoryId: body.categoryId,
+          tags: { connect: tagIds.map((id) => ({ id })) },
+          options: {
+            create: body.options.map((o, index) => ({
+              productVariantId: o.productVariantId,
+              sortOrder: index,
+            })),
+          },
+          skus: {
+            create: body.skus.map((s) => ({
+              sku: s.sku,
+              price: s.price,
+              compareAtPrice: s.compareAtPrice ?? null,
+              stock: s.stock,
+              status: s.status,
+              weightGrams: s.weightGrams ?? null,
+              lengthCm: s.lengthCm ?? null,
+              widthCm: s.widthCm ?? null,
+              heightCm: s.heightCm ?? null,
+              values: { create: s.optionValueIds.map((variantId) => ({ variantId })) },
+            })),
+          },
+          images: {
+            create: body.images.map((img, index) => ({
+              url: img.url,
+              alt: img.alt ?? null,
+              sortOrder: index,
+              variantId: img.optionValueId ?? null,
+            })),
+          },
+        },
+        include: {
+          category: { select: { id: true, name: true } },
+          tags: { select: { id: true, name: true } },
+          options: { orderBy: { sortOrder: "asc" } },
+          skus: { include: { values: { select: { variantId: true } } } },
+          images: { orderBy: { sortOrder: "asc" } },
+        },
+      })
     })
   },
-  getOptions: async (query: GetSearchOptions) => {
-    const {
-      search,
-      limit = 10,
-    } = query
-
-    const options = await prisma.productTag.findMany({
-      where: {
-        status: "ACTIVE",
-        ...(search
-          ? {
-            name: {
-              contains: search,
-              mode: "insensitive"
-            }
-          } : {}
-        )
-      },
-      select: {
-        id: true,
-        name: true
-      },
-      orderBy: {
-        createdAt: "desc"
-      },
-      take: Math.min(limit, 50)
-    })
-
-    const result = options.map((item) => ({
-      value: item.id,
-      label: item.name
-    }))
-
-    return result
-  },
-  update: (id: string, data: UpdateProductTag) => {
-    const validated = productTagSchema.update.parse(data)
-
-    return prisma.productTag.update({
-      where: {
-        id,
-      },
-      data: validated
-    })
-  },
-  delete: (id: string) => {
-    return prisma.productTag.delete({
-      where: {
-        id
-      }
-    })
-  }
+  getAll: async () => { },
+  getById: async () => { },
+  getOptions: async () => { },
+  update: async () => { },
+  delete: async () => { },
 }
 
 export default productTagService

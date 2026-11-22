@@ -1,45 +1,45 @@
-import { ALERT_TEXT } from 'consts'
-import { AlertTextType } from 'types'
-import { createColumnHelper } from "@tanstack/react-table"
-import { format } from 'date-fns'
-import { type DataTableFeatures } from "components"
+import { ALERT_TEXT } from "consts"
+import { AlertTextType } from "types"
+import type { ProductFormValues } from "./product.schema"
 
-
-const defaultName = 'สินค้า'
-const defaultPath = 'product'
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const columnHelper = createColumnHelper<DataTableFeatures, any>()
+const NAME = "สินค้า"
+const PATH = "product"
 
 export const PRODUCT = {
-  name: defaultName,
-  text: (
-    action: AlertTextType.ActionProps,
-    status?: AlertTextType.StatusProps
-  ) =>
-    status
-      ? `${ALERT_TEXT.action[action]}${defaultName}${ALERT_TEXT.status[status]}`
-      : `${ALERT_TEXT.action[action]}${defaultName}`,
-  path: (
-    action?: AlertTextType.PathProps
-  ) => action ? `/${defaultPath}/${action}` : `/${defaultPath}`,
-  columns: columnHelper.columns([
-    columnHelper.accessor("name", {
-      header: "ชื่อหมวดหมู่สินค้า",
-    }),
-    columnHelper.accessor("createdAt", {
-      header: "วันที่สร้าง",
-      cell: info => {
-        const { updatedAt } = info.row.original
-        return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
-      },
-    }),
-    columnHelper.accessor("updatedAt", {
-      header: "วันที่อัปเดต",
-      cell: info => {
-        const { updatedAt } = info.row.original
-        return updatedAt ? format(updatedAt, 'dd/MM/yyyy') : '-'
-      },
-    }),
-  ])
-} 
+  name: NAME,
+  queryKey: {
+    all: [PATH] as const,
+    list: (params: object) => [PATH, "list", params] as const,
+    detail: (id: string) => [PATH, "detail", id] as const,
+  },
+  text: (action: AlertTextType.ActionProps, status?: AlertTextType.StatusProps) =>
+    `${ALERT_TEXT.action[action]}${NAME}${status ? ALERT_TEXT.status[status] : ""}`,
+  path: (action?: AlertTextType.PathProps) => (action ? `/${PATH}/${action}` : `/${PATH}`),
+  detailPath: (id: string) => `/${PATH}/${id}`,
+}
+
+export const MAX_IMAGES = 5
+export const MAX_SKUS = 200
+
+export const DEFAULT_VALUES: ProductFormValues = {
+  name: "",
+  slug: "",
+  description: "",
+  status: "ACTIVE",
+  category: null,
+  tags: [],
+  images: [],
+  options: [],
+  // สินค้าที่ไม่มีตัวเลือกมี SKU เดียว (key ของชุดค่าว่างคือ "")
+  skus: [
+    {
+      variantIds: [],
+      sku: "",
+      price: "",
+      compareAtPrice: "",
+      stock: 0,
+      weightGrams: null,
+      status: "ACTIVE",
+    },
+  ],
+}
