@@ -230,10 +230,10 @@ export function Sidebar() {
 
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">
-                    {data?.name}
+                    {data?.user?.name ?? null}
                   </span>
                   <span className="truncate">
-                    {data?.email}
+                    {data?.user?.email ?? null}
                   </span>
                 </div>
 
@@ -256,7 +256,7 @@ export function Sidebar() {
 
                       <div className="grid flex-1 text-left text-sm leading-tight">
                         <span className="truncate font-medium">
-                          {data?.name}
+                          {data?.user?.name ?? null}
                         </span>
                       </div>
                     </div>

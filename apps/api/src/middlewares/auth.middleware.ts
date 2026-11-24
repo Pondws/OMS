@@ -1,36 +1,29 @@
-import {
-  Request,
-  Response,
-  NextFunction
-} from "express"
+import { Request, Response, NextFunction } from "express"
+import { fromNodeHeaders } from "better-auth/node"
+import { auth } from "../lib/auth"
 
-import JWTGenerate from "../lib/jwt"
-
-export const authenticate = (
+export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const token = req.cookies.accessToken
+    const session = await auth.api.getSession({
+      headers: fromNodeHeaders(req.headers),
+    })
 
-    if (!token) {
-      return res.status(401).json({
-        message: "Unauthorized"
-      })
+    if (!session) {
+      return res.status(401).json({ message: "Unauthorized" })
     }
 
-    const payload = JWTGenerate.verifyAccessToken(token)
-
-    if (typeof payload === "string" || !payload.id || !payload.role) {
-      return res.status(401).json({ message: "Invalid token" })
-    }
-    req.user = { id: payload.id, email: payload.email, role: payload.role }
+    // req.user = {
+    //   id: session.user.id,
+    //   email: session.user.email,
+    //   role: (session.user as { role?: string }).role ?? "user",
+    // }
 
     next()
   } catch (error) {
-    return res.status(401).json({
-      message: "Invalid or expired token",
-    })
+    next(error)
   }
 }
