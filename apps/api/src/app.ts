@@ -1,6 +1,8 @@
 import express from 'express'
 import cors from 'cors'
 import cookieParser from "cookie-parser"
+import { toNodeHandler } from "better-auth/node";
+import { auth } from "../src/lib/auth"
 
 import authRoute from './modules/auth/auth.route'
 import userRoute from './modules/user/user.route'
@@ -18,10 +20,12 @@ app.use(cors({
   credentials: true
 }))
 
+app.all('/api/auth/{*any}', toNodeHandler(auth))
+
 app.use(express.json())
 app.use(cookieParser())
 
-app.use('/auth', authRoute)
+// app.use('/auth', authRoute)
 app.use(userRoute)
 app.use('/', uploadImageRoute)
 app.use('/product-categories', productCategoryRoute)

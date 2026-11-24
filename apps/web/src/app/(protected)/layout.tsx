@@ -3,21 +3,14 @@ import {
   SidebarInset,
   SidebarTrigger,
   Sidebar,
-  GuardProvider
+  AuthGuard
 } from 'components'
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function ProtectedLayout({ children }: { children: React.ReactNode }) {
   return (
-    <GuardProvider>
+    <AuthGuard>
       <SidebarProvider>
         <Sidebar />
-        {/* <SidebarInset>
-          <div id='sidebar-toggle' className='px-3 pt-2.5'>
-            <SidebarTrigger />
-          </div>
-          {children}
-        </SidebarInset> */}
-
           <SidebarInset className="flex min-h-0 flex-col">
           <div className="shrink-0 px-3 pt-2.5">
             <SidebarTrigger />
@@ -28,6 +21,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
           </main>
         </SidebarInset>
       </SidebarProvider>
-    </GuardProvider>
+    </AuthGuard>
   )
 }

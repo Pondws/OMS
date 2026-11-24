@@ -3,6 +3,7 @@
 import { Noto_Sans_Thai } from "next/font/google"
 import "./globals.css"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { Toaster } from 'sonner'
 
 const noto_sans = Noto_Sans_Thai({
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={`${noto_sans.className}`}>
         <QueryClientProvider client={queryClient}>
           {children}
+          <ReactQueryDevtools initialIsOpen={false} />
           <Toaster
             position="bottom-center"
             richColors={true}
