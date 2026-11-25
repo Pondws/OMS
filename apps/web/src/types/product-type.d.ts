@@ -1,8 +1,19 @@
 import { Status } from "type"
 import { ProductVariantType } from "types"
 
+export interface Image {
+  id: string
+  url: string
+  alt: string | null
+  sortOrder: number
+}
+
+export interface ImageInput {
+  url: string
+  alt: string | null
+  sortOrder: number
+}
 export namespace ProductType {
-  /** GET /products/:id */
   export interface ProductDetail {
     id: string
     name: string
@@ -11,10 +22,12 @@ export namespace ProductType {
     status: Status
     category: { id: string; name: string }
     tags: { id: string; name: string }[]
+    // TODO: ตอนทำ get by id ต้องให้ backend ส่งรูปแบบนี้ (ตอนนี้ backend ยังส่ง ProductOption ดิบ)
     options: {
       productVariantId: string
       name: string
       type: ProductVariantType.DisplayType
+      showImage: boolean
       values: { id: string; name: string; colorHex: string | null; sortOrder: number }[]
     }[]
     skus: {
@@ -27,10 +40,10 @@ export namespace ProductType {
       status: Status
       variantIds: string[]
     }[]
-    images: { id: string; url: string; alt: string | null; optionValueId: string | null }[]
+    images: Image[]
+    imageGroups: { id: string; variantIds: string[]; images: Image[] }[]
   }
 
-  /** body ของ create / update */
   export interface ProductForm {
     name: string
     slug: string
@@ -38,17 +51,21 @@ export namespace ProductType {
     status: Status
     categoryId: string
     tagIds: string[]
-    options: { productVariantId: string }[]
+    options: {
+      productVariantId: string
+      showImage: boolean
+      variantIds: string[]
+    }[]
     skus: {
-      id?: string
       sku: string
       price: string
       compareAtPrice: string | null
-      stock: number
+      initialStock: number
       weightGrams: number | null
       status: Status
       variantIds: string[]
     }[]
-    images: { url: string; alt: string | null; optionValueId: string | null }[]
+    images: ImageInput[]
+    imageGroups: { variantIds: string[]; images: ImageInput[] }[]
   }
 }

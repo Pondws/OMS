@@ -16,43 +16,57 @@ import { ProductType } from "types"
 import { handleError, Helper } from "utils"
 import { STATUS } from "consts"
 import { PRODUCT, MAX_IMAGES, DEFAULT_VALUES } from "./product.const"
-import { productSchema, ProductVariantOption, type ProductFormValues, type ProductOption, type SkuRow } from "./product.schema"
+import {
+  productSchema,
+  ProductVariantOption,
+  type ProductFormValues,
+  type ProductOption,
+  type ProductImage,
+  type ImageGroup,
+  type SkuRow,
+} from "./product.schema"
 
 import { cn } from "@/lib/utils"
 import { skuColumns } from "./product.columns"
 import { FormTable } from "../FormTable/FormTable"
 
+// ─── กลุ่มรูป ───────────────────────────────
 
+/** ชุดค่าสองชุดเหมือนกันไหม โดยไม่สนลำดับ */
+const sameIds = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((id) => b.includes(id))
+
+/** ทุกชุดของค่าที่เลือก เรียงตามลำดับใน variants */
+const cartesian = (options: ProductOption[]) =>
+  options.reduce<string[][]>(
+    (acc, o) => {
+      const ids = o.variants.filter((v) => o.selectedVariantIds.includes(v.id)).map((v) => v.id)
+      return acc.flatMap((combo) => ids.map((id) => [...combo, id]))
+    },
+    [[]],
+  )
+
+/** กลุ่มรูป = ทุกชุดค่าของตัวเลือกที่ติ๊ก "ใช้รูปตามตัวเลือกนี้" กลุ่มที่มีอยู่แล้วใช้รูปเดิมต่อ */
+function buildImageGroups(options: ProductOption[], current: ImageGroup[]): ImageGroup[] {
+  const imageOptions = options.filter((o) => o.showImage && o.selectedVariantIds.length > 0)
+  if (imageOptions.length === 0) return []
+
+  return cartesian(imageOptions).map((variantIds) => {
+    const existing = current.find((g) => sameIds(g.variantIds, variantIds))
+    return existing ?? { variantIds, images: [] }
+  })
+}
 
 // ─── SKU ────────────────────────────────────
 
-// const comboKey = (ids: string[]) => [...ids].sort().join("|")
-
-// const emptySku = (optionValueIds: string[]): SkuRow => ({
-//   key: comboKey(optionValueIds),
-//   optionValueIds,
-//   sku: "",
-//   price: "",
-//   compareAtPrice: "",
-//   stock: 0,
-//   weightGrams: null,
-//   status: "ACTIVE",
-// })
-
-/** ชุดค่าหนึ่งเป็นส่วนหนึ่งของอีกชุดหรือเปล่า เช่น [ดำ, M] อยู่ใน [ดำ, M, Cotton] */
-// const isSubset = (a: string[], b: string[]) => a.every((id) => b.includes(id))
-
 /**
  * สร้าง SKU ทุกชุดจากค่าที่เลือก
- * - ชุดค่าเดิมตรงกันพอดี → ใช้แถวเดิม (เรียงค่าตามลำดับตัวเลือกล่าสุด)
- * - เพิ่มหรือเอาตัวเลือกออก → คัดลอกราคาและน้ำหนักจากแถวเดิมที่ใกล้ที่สุด
- *   (ไม่คัดลอกรหัส SKU, สต็อก และ skuId เพราะเป็นสินค้าคนละชิ้นแล้ว)
+ * - ชุดค่าตรงกับแถวเดิมพอดี → ใช้แถวเดิม
+ * - เพิ่มหรือเอาตัวเลือกออก → คัดลอกราคาและการตั้งค่าจากแถวเดิมที่เกี่ยวข้อง
  */
-function buildSkus(options: ProductOption[], current: SkuRow[], prefix = ""): SkuRow[] {
-  // 1. ใช้เฉพาะตัวเลือกที่เลือกค่าไว้แล้ว
+function buildSkus(options: ProductOption[], current: SkuRow[]): SkuRow[] {
   const active = options.filter((o) => o.selectedVariantIds.length > 0)
 
-  // 2. สร้างทุกคู่ของค่า (cartesian product) เรียงตามลำดับใน variants
   const combos = active.reduce<{ id: string; name: string }[][]>(
     (acc, o) => {
       const values = o.variants.filter((v) => o.selectedVariantIds.includes(v.id))
@@ -66,29 +80,26 @@ function buildSkus(options: ProductOption[], current: SkuRow[], prefix = ""): Sk
   const byKey = new Map(current.map((s) => [toKey(s.variantIds), s]))
   const claimed = new Set<SkuRow>() // SKU เดิมที่ถูกส่งต่อ id ไปแล้ว
 
-  // 3. รอบแรก: จับคู่ที่ตรงกันพอดีก่อน
+  // รอบแรก: จับคู่ที่ตรงกันพอดีก่อน
   const exact = combos.map((combo) => {
     const found = byKey.get(toKey(combo.map((v) => v.id)))
     if (found) claimed.add(found)
     return found
   })
 
-  // 4. รอบสอง: สร้างแต่ละแถว
+  // รอบสอง: สร้างแต่ละแถว
   return combos.map((combo, i) => {
     const variantIds = combo.map((v) => v.id)
-
     if (exact[i]) return { ...exact[i], variantIds }
-
-    const sku = [prefix, ...combo.map((v) => v.name)]
-      .filter(Boolean)
-      .join("-")
-      .replace(/\s+/g, "-")
-      .toUpperCase()
-      .slice(0, 64)
 
     const base: SkuRow = {
       variantIds,
-      sku,
+      sku: combo
+        .map((v) => v.name)
+        .join("-")
+        .replace(/\s+/g, "-")
+        .toUpperCase()
+        .slice(0, 64),
       price: "",
       compareAtPrice: "",
       stock: 0,
@@ -96,12 +107,9 @@ function buildSkus(options: ProductOption[], current: SkuRow[], prefix = ""): Sk
       status: "ACTIVE",
     }
 
-    // SKU เดิมที่เกี่ยวข้อง: คู่ใหม่ครอบคู่เดิม (เพิ่มตัวเลือก) หรือคู่เดิมครอบคู่ใหม่ (ลบตัวเลือก)
-    const isRelated = (s: SkuRow) => {
-      const added = s.variantIds.every((id) => variantIds.includes(id))
-      const removed = variantIds.every((id) => s.variantIds.includes(id))
-      return added || removed
-    }
+    // SKU เดิมที่เกี่ยวข้อง: ชุดใหม่ครอบชุดเดิม (เพิ่มตัวเลือก) หรือชุดเดิมครอบชุดใหม่ (ลบตัวเลือก)
+    const isRelated = (s: SkuRow) =>
+      s.variantIds.every((id) => variantIds.includes(id)) || variantIds.every((id) => s.variantIds.includes(id))
     const related = current.find((s) => isRelated(s) && !claimed.has(s)) ?? current.find(isRelated)
     if (!related) return base
 
@@ -115,26 +123,11 @@ function buildSkus(options: ProductOption[], current: SkuRow[], prefix = ""): Sk
     // SKU เดิมถูกส่งต่อไปแล้ว: คัดลอกแค่ราคาและการตั้งค่า
     if (claimed.has(related)) return { ...base, ...template }
 
-    // ส่งต่อ id และสต็อกให้คู่แรกที่เกี่ยวข้อง
+    // ส่งต่อ id และสต็อกให้ชุดแรกที่เกี่ยวข้อง
     claimed.add(related)
-    return {
-      ...base,
-      ...template,
-      ...(related.id && { id: related.id }),
-      stock: related.stock
-    }
+    return { ...base, ...template, ...(related.id && { id: related.id }), stock: related.stock }
   })
 }
-
-// const countCombos = (options: ProductOption[]) =>
-//   options.filter((o) => o.selectedIds.length).reduce((n, o) => n * o.selectedIds.length, 1)
-
-/** รหัส SKU จาก slug และชื่อค่า เช่น BASIC-COTTON-TEE-ดำ-M */
-// function suggestSkuCode(slug: string, valueNames: string[]) {
-//   const base = slug.toUpperCase() || "SKU"
-//   const parts = valueNames.map((n) => n.toUpperCase().replace(/\s+/g, ""))
-//   return [base, ...parts].filter(Boolean).join("-")
-// }
 
 /** slug จากชื่อสินค้า (a-z, 0-9 และ -) */
 function slugify(name: string) {
@@ -148,98 +141,55 @@ function slugify(name: string) {
 
 // ─── API ↔ ฟอร์ม ─────────────────────────────
 
-/** ตัวเลือกสินค้า (พร้อมค่าทั้งหมด) → แถวตัวเลือกในฟอร์ม */
-// function toProductOption(variant: ProductVariantType.ProductVariant, selectedIds: string[] = []): ProductOption {
-//   return {
-//     label: variant.name,
-//     value: variant.id,
-//     type: variant.type,
-//     variants: Helper.sortBySortOrder(variant.options).map(({ id, name, colorHex }) => ({ id, name, colorHex })),
-//     selectedIds,
-//   }
-// }
-
 /** ข้อมูลสินค้าจาก API → ค่าในฟอร์ม */
-const toFormValues = (product: ProductType.ProductDetail) => {
-  return {
-    name: product.name,
-    slug: product.slug,
-    description: product.description ?? "",
-    status: product.status,
-    category: { label: product.category.name, value: product.category.id },
-    tags: product.tags.map((t) => ({ label: t.name, value: t.id })),
-    images: product.images.map((img) => ({ url: img.url, path: "" })),
-    // options,
-    // skus: product.skus.map((s) => {
-    //   // เรียงค่าตามลำดับตัวเลือก (สี แล้วไซส์) ให้ป้ายในตารางอ่านง่าย
-    //   const ordered = options
-    //     .map((o) => s.optionValueIds.find((vid) => o.variants.some((v) => v.id === vid)))
-    //     .filter((vid): vid is string => !!vid)
-    //   return {
-    //     skuId: s.id,
-    //     // key: comboKey(ordered),
-    //     optionValueIds: ordered,
-    //     sku: s.sku,
-    //     price: s.price ?? "",
-    //     compareAtPrice: s.compareAtPrice ?? "",
-    //     stock: s.stock,
-    //     weightGrams: s.weightGrams ?? null,
-    //     status: s.status,
-    //   }
-    // }),
-  }
-}
+// TODO: ทำตอน get by id (options, imageGroups, skus)
+const toFormValues = (product: ProductType.ProductDetail) => ({
+  name: product.name,
+  slug: product.slug,
+  description: product.description ?? "",
+  status: product.status,
+  category: { label: product.category.name, value: product.category.id },
+  tags: product.tags.map((t) => ({ label: t.name, value: t.id })),
+  images: product.images.map((img) => ({ url: img.url })),
+})
+
+const loadProduct = async (id: string) => toFormValues(await productApi.getByID(id))
+
+/** รูปในฟอร์ม → รูปที่ส่งไป API โดยใช้ลำดับใน array เป็น sortOrder (0 = รูปแรก) */
+const toImagesPayload = (images: ProductImage[]) =>
+  images.map((img, sortOrder) => ({ url: img.url, alt: null, sortOrder }))
 
 /** ค่าในฟอร์ม → body ที่ส่งไป API */
-const toPayload = (v: ProductFormValues) => {
-  return {
-    name: v.name,
-    slug: v.slug,
-    description: v.description || null,
-    status: v.status,
-    categoryId: v.category!.value,
-    tagIds: v.tags.map((t) => t.value),
-    options: v.options.map((o) => ({ productVariantId: o.productVariantId })),
-    skus: v.skus.map((s) => ({
-      // ...(s.skuId ? { id: s.skuId } : {}),
-      sku: s.sku,
-      price: s.price,
-      compareAtPrice: s.compareAtPrice || null,
-      stock: s.stock,
-      weightGrams: s.weightGrams,
-      status: s.status,
-      variantIds: s.variantIds,
-    })),
-    images: v.images.map((img) => ({ url: img.url, alt: null, optionValueId: null })),
-  }
-}
-
-// ─── เรียก API ───────────────────────────────
-
-// const fetchOption = async (productVariantId: string, selectedIds: string[] = []) =>
-//   toProductOption(await productVariantApi.getByID(productVariantId), selectedIds)
-
-// async function loadProduct(id: string): Promise<ProductFormValues> {
-//   const product = await productApi.getByID(id)
-//   // API ส่งมาแค่ค่าที่สินค้าใช้ ต้องดึงค่าทั้งหมดของแต่ละตัวเลือกเพื่อให้เลือกเพิ่มได้
-//   const options = await Promise.all(
-//     product.options.map((o) => fetchOption(o.productVariantId, o.values.map((v) => v.id))),
-//   )
-//   return toFormValues(product, options)
-// }
-
-const loadProduct = async (id: string) => {
-  const product = await productApi.getByID(id)
-  // const options = product.options.map((o) => ({
-  //   productVariantId: o.productVariant.id,
-  //   name: o.productVariant.name,
-  //   variants: o.productVariant.variants.map(({ id, name, colorHex }) => ({ id, name, colorHex })),
-  //   selectedVariantIds: o.values.map((v) => v.variantId),
-  // }))
-  return toFormValues(product)
-}
+const toPayload = (v: ProductFormValues): ProductType.ProductForm => ({
+  name: v.name,
+  slug: v.slug,
+  description: v.description || null,
+  status: v.status,
+  categoryId: v.category!.value,
+  tagIds: v.tags.map((t) => t.value),
+  images: toImagesPayload(v.images),
+  options: v.options.map((o) => ({
+    productVariantId: o.productVariantId,
+    showImage: o.showImage,
+    variantIds: o.selectedVariantIds,
+  })),
+  // กลุ่มที่ไม่มีรูปไม่ต้องส่ง หน้าร้านจะใช้รูปหลักแทน
+  imageGroups: v.imageGroups
+    .filter((g) => g.images.length > 0)
+    .map((g) => ({ variantIds: g.variantIds, images: toImagesPayload(g.images) })),
+  skus: v.skus.map((s) => ({
+    variantIds: s.variantIds,
+    sku: s.sku,
+    price: s.price,
+    compareAtPrice: s.compareAtPrice || null,
+    initialStock: s.stock,
+    weightGrams: s.weightGrams,
+    status: s.status,
+  })),
+})
 
 type StatusPath = "status" | `skus.${number}.status`
+type ImagePath = "images" | `imageGroups.${number}.images`
 
 // ─── Form ───────────────────────────────────
 
@@ -249,8 +199,6 @@ function ProductFormComp({ id }: { id?: string }) {
   const descId = useId()
   const router = useRouter()
   const queryClient = useQueryClient()
-  // const [bulkPrice, setBulkPrice] = useState("")
-  // const [bulkStock, setBulkStock] = useState("")
   const dirty = { shouldDirty: true, shouldValidate: true }
 
   const {
@@ -267,19 +215,23 @@ function ProductFormComp({ id }: { id?: string }) {
     defaultValues: DEFAULT_VALUES,
   })
 
-  // const value = useWatch({ control })
   const name = useWatch({ control, name: "name" })
   const images = useWatch({ control, name: "images" })
   const options = useWatch({ control, name: "options" })
+  const imageGroups = useWatch({ control, name: "imageGroups" })
   const skus = useWatch({ control, name: "skus" })
   // fields ไม่เปลี่ยนตอนพิมพ์ในตาราง ฟอร์มจึงไม่ re-render ทั้งหน้า
   const { fields: skuFields } = useFieldArray({ control, name: "skus" })
 
-  // const valueName = new Map(options.flatMap((o) => o.variants.map((v) => [v.id, v.name] as const)))
-  // const hasOptions = skuFields.some((f) => f.optionValueIds.length > 0)
+  // id → { name, colorHex } ใช้แสดงป้ายของแต่ละกลุ่มรูป
+  const variantById = useMemo(
+    () => new Map(options.flatMap((o) => o.variants.map((v) => [v.id, v] as const))),
+    [options],
+  )
   const skusError = errors.skus?.root?.message ?? errors.skus?.message
 
   // ─── โหลด / บันทึก ──
+
   const { data } = useQuery({
     queryKey: PRODUCT.queryKey.detail(id ?? ""),
     queryFn: () => loadProduct(id!),
@@ -320,82 +272,102 @@ function ProductFormComp({ id }: { id?: string }) {
 
   // ─── รูป ──
 
-  const handleUploadImages = async (files: File[]) => {
-    const remaining = MAX_IMAGES - getValues("images").length
+  /** หาที่เก็บรูปของกลุ่มจากชุดค่า เช่น [ดำ] → "imageGroups.0.images" ถ้าไม่เจอกลุ่มนั้นคืน null */
+  const groupPath = (variantIds: string[]): ImagePath | null => {
+    const i = getValues("imageGroups").findIndex((g) => sameIds(g.variantIds, variantIds))
+    return i < 0 ? null : `imageGroups.${i}.images`
+  }
+
+  const uploadImages = async (getPath: () => ImagePath | null, files: File[]) => {
+    const before = getPath()
+    if (!before) return
+
+    const remaining = MAX_IMAGES - getValues(before).length
     if (remaining <= 0) return toast.error(`อัปโหลดได้ไม่เกิน ${MAX_IMAGES} รูป`)
+    if (files.length > remaining) toast.warning(`เพิ่มได้อีก ${remaining} รูป รูปที่เกินจะไม่ถูกอัปโหลด`)
+
     try {
       const uploaded = await uploadImageApi("products", files.slice(0, remaining))
-      setValue("images", [...getValues("images"), ...uploaded], dirty)
+
+      // หาที่เก็บใหม่อีกรอบ เพราะระหว่างรออัปโหลด ผู้ใช้อาจแก้ตัวเลือกจนลำดับกลุ่มเปลี่ยน
+      const path = getPath()
+      if (!path) return toast.error("ตัวเลือกถูกเปลี่ยนระหว่างอัปโหลด กรุณาอัปโหลดใหม่")
+
+      setValue(path, [...getValues(path), ...uploaded].slice(0, MAX_IMAGES), dirty)
     } catch (error) {
       toast.error(handleError(error))
     }
   }
 
-  const handleRemoveImage = (index: number) => {
-    setValue("images", getValues("images").filter((_, i) => i !== index), dirty)
+  const removeImage = (path: ImagePath, index: number) => {
+    setValue(path, getValues(path).filter((_, i) => i !== index), dirty)
   }
 
-  const handleReorderImages = (from: number, to: number) => {
-    setValue("images", arrayMove(getValues("images"), from, to), dirty)
+  const reorderImages = (path: ImagePath, from: number, to: number) => {
+    setValue(path, arrayMove(getValues(path), from, to), dirty)
   }
 
   // ─── ตัวเลือก ──
 
-  const applyOptions = (option: ProductOption[]) => {
-    const currentSkus = getValues("skus")
-    const nextSkus = buildSkus(option, currentSkus)
-
-    setValue("options", option, dirty)
-    setValue("skus", nextSkus, { shouldDirty: true })
+  const applyOptions = (next: ProductOption[]) => {
+    setValue("options", next, dirty)
+    setValue("skus", buildSkus(next, getValues("skus")), { shouldDirty: true })
+    setValue("imageGroups", buildImageGroups(next, getValues("imageGroups")), { shouldDirty: true })
   }
 
   const handleOptionsChange = (selected: AutocompleteOption<ProductVariantOption>[]) => {
     const currentOptions = getValues("options")
-    // option ที่เลือกไว้แล้วใช้ข้อมูลเดิม (ค่าที่ติ๊กและโหมดรูปไม่หาย) ตัวใหม่แปลงจาก autocomplete
+    // ตัวเลือกที่มีอยู่แล้วใช้ข้อมูลเดิม (ค่าที่เลือกและ showImage ไม่หาย) ตัวใหม่แปลงจาก autocomplete
     applyOptions(
-      selected.map((s) => currentOptions.find((o) => o.productVariantId === s.value) ?? {
-        productVariantId: s.value,
-        name: s.label,
-        variants: s.data?.variants ?? [],
-        selectedVariantIds: [],
-      })
+      selected.map(
+        (s) =>
+          currentOptions.find((o) => o.productVariantId === s.value) ?? {
+            productVariantId: s.value,
+            name: s.label,
+            variants: s.data?.variants ?? [],
+            selectedVariantIds: [],
+            showImage: false,
+          },
+      ),
     )
   }
 
+  const toggleShowImage = (index: number) => {
+    // ถ้าอัปโหลดรูปตามตัวเลือกไว้แล้ว ให้ถามยืนยันก่อน เพราะรูปจะหายทั้งหมด
+    const hasImages = getValues("imageGroups").some((g) => g.images.length > 0)
+    if (hasImages && !window.confirm("รูปตามตัวเลือกที่อัปโหลดไว้จะถูกล้างทั้งหมด ต้องการทำต่อไหม?")) return
 
-  // const toggleValue = (optionIndex: number, variantId: string) => {
-  //   applyOptions(
-  //     getValues("options").map((opt, i) => {
-  //       if (i !== optionIndex) return opt
-  //       const on = opt.selectedIds.includes(variantId)
-  //       return {
-  //         ...opt,
-  //         // เรียงตามลำดับของตัวเลือก ไม่ใช่ตามลำดับที่กด
-  //         selectedIds: opt.variants
-  //           .map((v) => v.id)
-  //           .filter((vid) => (vid === variantId ? !on : opt.selectedIds.includes(vid))),
-  //       }
-  //     }),
-  //   )
-  // }
+    const next = getValues("options").map((o, i) => (i === index ? { ...o, showImage: !o.showImage } : o))
+    setValue("options", next, dirty)
+    // ชุดของตัวเลือกที่มีผลต่อรูปเปลี่ยน กลุ่มเดิมจึงใช้ไม่ได้แล้ว
+    setValue("imageGroups", buildImageGroups(next, []), { shouldDirty: true })
+  }
 
-  // ─── SKU ──
+  const toggleValue = (index: number, variantId: string) => {
+    applyOptions(
+      options.map((o, i) => {
+        if (i !== index) return o
+        const on = o.selectedVariantIds.includes(variantId)
+        return {
+          ...o,
+          // กรองจาก variants เพื่อให้ลำดับตรงกับ sortOrder เสมอ
+          selectedVariantIds: o.variants
+            .filter((x) => (x.id === variantId ? !on : o.selectedVariantIds.includes(x.id)))
+            .map((x) => x.id),
+        }
+      }),
+    )
+  }
 
-  // const applyToAllSkus = () => {
-  //   skuFields.forEach((_, i) => {
-  //     if (bulkPrice) setValue(`skus.${i}.price`, bulkPrice, dirty)
-  //     if (bulkStock) setValue(`skus.${i}.stock`, Number(bulkStock), dirty)
-  //   })
-  // }
+  const toggleAllValues = (index: number, selectAll: boolean) => {
+    applyOptions(
+      options.map((o, i) =>
+        i === index ? { ...o, selectedVariantIds: selectAll ? o.variants.map((x) => x.id) : [] } : o,
+      ),
+    )
+  }
 
-  // const fillSkuCodes = () => {
-  //   const slug = getValues("slug")
-  //   getValues("skus").forEach((s, i) => {
-  //     if (s.sku) return
-  //     const names = s.optionValueIds.map((vid) => valueName.get(vid) ?? "")
-  //     setValue(`skus.${i}.sku`, suggestSkuCode(slug, names), dirty)
-  //   })
-  // }
+  const removeOption = (index: number) => applyOptions(options.filter((_, i) => i !== index))
 
   // ─── ใช้ร่วมกัน ──
 
@@ -432,7 +404,13 @@ function ProductFormComp({ id }: { id?: string }) {
               <ArrowLeft />
               กลับ
             </Button>
-            <Button type="submit" form={formId} size="lg" className="px-8" disabled={isPending || (isEdit && !isDirty)}>
+            <Button
+              type="submit"
+              form={formId}
+              size="lg"
+              className="px-8"
+              disabled={isPending || (isEdit && !isDirty)}
+            >
               <Save />
               {isPending ? "กำลังบันทึก..." : "บันทึก"}
             </Button>
@@ -512,7 +490,7 @@ function ProductFormComp({ id }: { id?: string }) {
           </div>
         </CardBody>
 
-        {/* ─── รูปภาพ ─── */}
+        {/* ─── รูปหลัก ─── */}
         <CardBody title={`รูปภาพ (${images.length}/${MAX_IMAGES})`}>
           <ImageUpload
             placeholder="อัปโหลดรูป"
@@ -521,9 +499,9 @@ function ProductFormComp({ id }: { id?: string }) {
             helperText={errors.images?.message}
             multiple
             disabled={isPending || images.length >= MAX_IMAGES}
-            onSelect={handleUploadImages}
-            onRemove={handleRemoveImage}
-            onReorder={handleReorderImages}
+            onSelect={(files) => uploadImages(() => "images", files)}
+            onRemove={(i) => removeImage("images", i)}
+            onReorder={(from, to) => reorderImages("images", from, to)}
             primaryBadge="รูปหลัก"
           />
         </CardBody>
@@ -535,7 +513,7 @@ function ProductFormComp({ id }: { id?: string }) {
               label="ตัวเลือกสินค้า"
               placeholder="เลือกตัวเลือกสินค้า เช่น สี ไซส์ (ไม่บังคับ)"
               options={(search) => productVariantApi.getOptions({ search })}
-              value={options?.map(({ productVariantId, name }) => ({ value: productVariantId, label: name }))}
+              value={options.map(({ productVariantId, name }) => ({ value: productVariantId, label: name }))}
               onChange={handleOptionsChange}
               multiple
               clearable
@@ -544,7 +522,7 @@ function ProductFormComp({ id }: { id?: string }) {
               helperText={errors.options?.message}
             />
 
-            {options?.length > 0 && (
+            {options.length > 0 && (
               <div className="space-y-3">
                 {options.map((option, index) => {
                   const selected = new Set(option.selectedVariantIds)
@@ -552,27 +530,31 @@ function ProductFormComp({ id }: { id?: string }) {
                   const error = errors.options?.[index]?.selectedVariantIds?.message
 
                   return (
-                    <div key={option?.productVariantId} className="space-y-3 rounded-lg border p-4">
+                    <div key={option.productVariantId} className="space-y-3 rounded-lg border p-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <h4 className="font-medium">{option.name}</h4>
                         <span className="text-xs text-muted-foreground tabular-nums">
                           เลือก {selected.size}/{option.variants.length}
                         </span>
+
+                        <label className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                          <input
+                            type="checkbox"
+                            className="size-4 accent-primary"
+                            checked={option.showImage}
+                            disabled={isPending}
+                            onChange={() => toggleShowImage(index)}
+                          />
+                          ใช้รูปตามตัวเลือกนี้
+                        </label>
+
                         <div className="ml-auto flex gap-1">
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             disabled={isPending}
-                            onClick={() =>
-                              applyOptions(
-                                options.map((o, i) =>
-                                  i === index
-                                    ? { ...o, selectedVariantIds: allSelected ? [] : o.variants.map((x) => x.id) }
-                                    : o,
-                                ),
-                              )
-                            }
+                            onClick={() => toggleAllValues(index, !allSelected)}
                           >
                             {allSelected ? "ล้างที่เลือก" : "เลือกทั้งหมด"}
                           </Button>
@@ -582,7 +564,7 @@ function ProductFormComp({ id }: { id?: string }) {
                             size="sm"
                             className="text-muted-foreground hover:text-destructive"
                             disabled={isPending}
-                            onClick={() => applyOptions(options.filter((_, i) => i !== index))}
+                            onClick={() => removeOption(index)}
                           >
                             <X className="size-4" />
                           </Button>
@@ -598,21 +580,7 @@ function ProductFormComp({ id }: { id?: string }) {
                               type="button"
                               aria-pressed={checked}
                               disabled={isPending}
-                              onClick={() =>
-                                applyOptions(
-                                  options.map((o, i) =>
-                                    i !== index
-                                      ? o
-                                      : {
-                                        ...o,
-                                        // กรองจาก variants เพื่อให้ลำดับตรงกับ sortOrder เสมอ
-                                        selectedVariantIds: o.variants
-                                          .filter((x) => (x.id === v.id ? !checked : selected.has(x.id)))
-                                          .map((x) => x.id),
-                                      },
-                                  ),
-                                )
-                              }
+                              onClick={() => toggleValue(index, v.id)}
                               className={cn(
                                 "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors",
                                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50",
@@ -633,9 +601,7 @@ function ProductFormComp({ id }: { id?: string }) {
                       {error ? (
                         <p className="text-sm text-destructive">{error}</p>
                       ) : (
-                        selected.size === 0 && (
-                          <p className="text-sm text-muted-foreground">เลือกอย่างน้อย 1 ค่า</p>
-                        )
+                        selected.size === 0 && <p className="text-sm text-muted-foreground">เลือกอย่างน้อย 1 ค่า</p>
                       )}
                     </div>
                   )
@@ -645,43 +611,61 @@ function ProductFormComp({ id }: { id?: string }) {
           </div>
         </CardBody>
 
+        {/* ─── รูปตามตัวเลือก ─── */}
+        {imageGroups.length > 0 && (
+          <CardBody title={`รูปตามตัวเลือก (${imageGroups.length} กลุ่ม)`}>
+            <p className="mb-4 text-sm text-muted-foreground">
+              เมื่อลูกค้าเลือกตัวเลือก รูปของกลุ่มนั้นจะแสดงแทนรูปหลัก กลุ่มที่ไม่มีรูปจะใช้รูปหลัก
+            </p>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {imageGroups.map((group, gi) => {
+                const path = `imageGroups.${gi}.images` as const
+                const error = errors.imageGroups?.[gi]?.images
+
+                return (
+                  <div key={group.variantIds.join("-")} className="space-y-3 rounded-lg border p-4">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {group.variantIds.map((vid) => {
+                        const v = variantById.get(vid)
+                        return (
+                          <span
+                            key={vid}
+                            className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-sm"
+                          >
+                            {v?.colorHex && (
+                              <span className="size-3 rounded-full border" style={{ backgroundColor: v.colorHex }} />
+                            )}
+                            {v?.name}
+                          </span>
+                        )
+                      })}
+                      <span className="ml-auto text-xs text-muted-foreground tabular-nums">
+                        {group.images.length}/{MAX_IMAGES}
+                      </span>
+                    </div>
+
+                    <ImageUpload
+                      placeholder="อัปโหลดรูป"
+                      value={group.images}
+                      multiple
+                      disabled={isPending || group.images.length >= MAX_IMAGES}
+                      error={!!error}
+                      helperText={error?.message}
+                      onSelect={(files) => uploadImages(() => groupPath(group.variantIds), files)}
+                      onRemove={(i) => removeImage(path, i)}
+                      onReorder={(from, to) => reorderImages(path, from, to)}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          </CardBody>
+        )}
+
         {/* ─── SKU ─── */}
         <CardBody title={`SKU (${skuFields.length} รายการ)`}>
           <div className="space-y-3">
-            {/* {options.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                สร้างจากตัวเลือกที่เลือกไว้ ({options.map((o) => `${o.label} ${o.selectedIds.length}`).join(" × ")})
-                ควรเลือกตัวเลือกให้ครบก่อนกรอกรหัส SKU และสต็อก
-              </p>
-            )} */}
-
-            {/* <div className="flex flex-wrap items-end gap-2 rounded-md bg-muted/50 p-3">
-              <Input
-                className="w-36"
-                aria-label="ราคาทุกแถว"
-                placeholder="ราคาทุกแถว"
-                inputMode="decimal"
-                value={bulkPrice}
-                onChange={(e) => setBulkPrice(e.target.value)}
-              />
-              <Input
-                className="w-36"
-                aria-label="สต็อกทุกแถว"
-                placeholder="สต็อกทุกแถว"
-                type="number"
-                min={0}
-                value={bulkStock}
-                onChange={(e) => setBulkStock(e.target.value)}
-              />
-              <Button type="button" variant="secondary" onClick={applyToAllSkus} disabled={!bulkPrice && !bulkStock}>
-                ใช้กับทุกแถว
-              </Button>
-              <Button type="button" variant="ghost" className="ml-auto" onClick={fillSkuCodes}>
-                <Wand2 />
-                สร้างรหัส SKU ที่ยังว่าง
-              </Button>
-            </div> */}
-
             <FormTable
               columns={columns}
               data={skuFields}

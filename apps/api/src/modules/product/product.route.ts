@@ -6,8 +6,7 @@ import { productBodySchema } from "./product.schema"
 
 const router = Router()
 
-router.use(authenticate)
-router.post("/", productController.create)
+router.post("/",  validate({ body: productBodySchema }), productController.create)
 // router.post("/", validate({ body: productBodySchema }), productController.create)
 // router.get("/", authorization, productController.getAll)
 // router.get("/options", authorization, productController.getOptions)

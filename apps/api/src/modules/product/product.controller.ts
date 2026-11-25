@@ -6,7 +6,7 @@ import { getSearchOptionsSchema } from "../../shard/schemas/get-search-options"
 const productController = {
   create: async (req: Request, res: Response) => {
     const data = await productService.create(req.body)
-    res.status(201).json({ data })
+    res.status(201).json(data)
   },
   // getAll: async (req: Request, res: Response) => {
   //   try {
