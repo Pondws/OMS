@@ -1,65 +1,101 @@
+import { Prisma } from "../../../generated/prisma/client"
 import { prisma } from "../../lib/prisma"
 import { ProductBody } from "./product.schema"
 
+const productInclude = {
+  category: { select: { id: true, name: true } },
+  tags: { select: { id: true, name: true } },
+  options: { orderBy: { sortOrder: "asc" } },
+  skus: { include: { values: { select: { variantId: true } } } },
+  images: { where: { groupId: null }, orderBy: { sortOrder: "asc" } },   // เฉพาะรูปหลัก
+  imageGroups: {
+    include: {
+      values: { select: { variantId: true } },
+      images: { orderBy: { sortOrder: "asc" } },
+    },
+  },
+} satisfies Prisma.ProductInclude
+
+type ProductWithRelations = Prisma.ProductGetPayload<{ include: typeof productInclude }>
+
+const toImage = (img: { id: string; url: string; alt: string | null; sortOrder: number }) => ({
+  id: img.id,
+  url: img.url,
+  alt: img.alt,
+  sortOrder: img.sortOrder,
+})
+
+const toProductResponse = (p: ProductWithRelations) => ({
+  ...p,
+  images: p.images.map(toImage),
+  imageGroups: p.imageGroups.map((g) => ({
+    id: g.id,
+    variantIds: g.values.map((v) => v.variantId),
+    images: g.images.map(toImage),
+  })),
+  skus: p.skus.map(({ values, ...s }) => ({
+    ...s,
+    variantIds: values.map((v) => v.variantId),
+  })),
+})
+
+export const assertReferences = async (body: ProductBody) => {
+  const categoryId = prisma.productCategory.findUnique({
+    where: { id: body.categoryId },
+    select: { id: true }
+  })
+  if (!categoryId) throw new Error("ไม่พบหมวดหมู่นี้")
+
+  if (body.tagIds.length) {
+    const found = await prisma.productTag.count({
+      where: { id: { in: body.tagIds } }
+    })
+    if (found !== body.tagIds.length) throw new Error("มีแท็กที่ไม่มีอยู่จริง")
+  }
+
+  if (body.options.length) {
+    const productVariants = await prisma.productVariant.findMany({
+      where: { id: { in: body.options.map((o) => o.productVariantId) }, status: "ACTIVE" },
+      select: { id: true, variants: { select: { id: true } } },
+    })
+
+    const valuesOf = new Map(
+      productVariants.map((pv) => [pv.id, new Set(pv.variants.map((v) => v.id))]),
+    )
+
+    for (const o of body.options) {
+      const allowed = valuesOf.get(o.productVariantId)
+      if (!allowed) throw new Error("มีตัวเลือกสินค้าที่ไม่มีอยู่จริง หรือถูกปิดใช้งาน")
+      if (!o.variantIds.every((id) => allowed.has(id))) {
+        throw new Error("มีค่าที่ไม่ได้อยู่ในตัวเลือกนี้")
+      }
+    }
+  }
+}
+
 const productTagService = {
   create: async (body: ProductBody) => {
-    return prisma.$transaction(async (tx) => {
-      const categoryId = prisma.productCategory.findUnique({
-        where: { id: body.categoryId },
-        select: { id: true }
-      })
-      if (!categoryId) throw new Error("ไม่พบหมวดหมู่นี้")
+    await assertReferences(body)
 
-      const tagIds = [...new Set(body.tagIds)]
-      if (tagIds.length) {
-        const found = await tx.productTag.count({ where: { id: { in: tagIds } } })
-        if (found !== tagIds.length) throw new Error("มีแท็กที่ไม่มีอยู่จริง")
-      }
+    const groups = body.imageGroups.filter((g) => g.images.length > 0)
 
-      const productVariantIds = body.options.map((o) => o.productVariantId)
-      const productVariants = productVariantIds.length
-        ? await tx.productVariant.findMany({
-          where: { id: { in: productVariantIds }, status: "ACTIVE" },
-          select: { id: true, variants: { select: { id: true } } },
-        })
-        : []
+    const urls = [...body.images, ...groups.flatMap((g) => g.images)].map((i) => i.url)
+    const taken = await prisma.productImage.count({ where: { url: { in: urls } } })
+    if (taken > 0) throw new Error("มีรูปที่ถูกใช้กับสินค้าอื่นแล้ว กรุณาอัปโหลดใหม่")
 
-      if (productVariants.length !== productVariantIds.length) {
-        throw new Error("มีตัวเลือกสินค้าที่ไม่มีอยู่จริง หรือถูกปิดใช้งาน")
-      }
-
-      const productVariantIdOf = new Map(
-        productVariants.flatMap((pv) => pv.variants.map((v) => [v.id, pv.id])),
-      )
-
-      body.skus.forEach((sku) => {
-        const skuProductVariantIds = sku.optionValueIds.map((id) => productVariantIdOf.get(id))
-        if (skuProductVariantIds.some((id) => !id)) {
-          throw new Error("มีค่าที่ไม่ได้อยู่ในตัวเลือกของสินค้านี้")
-        }
-        if (new Set(skuProductVariantIds).size !== productVariantIds.length) {
-          throw new Error("ต้องเลือกตัวเลือกละ 1 ค่า")
-        }
-      })
-
-      const used = new Set(body.skus.flatMap((s) => s.optionValueIds));
-      body.images.forEach((img) => {
-        if (img.optionValueId && !used.has(img.optionValueId)) {
-          throw new Error("ผูกกับค่าที่ไม่มี SKU ใช้");
-        }
-      })
-
-      return tx.product.create({
+    const product = await prisma.$transaction(async (tx) => {
+      const created = await tx.product.create({
         data: {
           name: body.name,
           slug: body.slug,
           description: body.description ?? null,
           status: body.status,
           categoryId: body.categoryId,
-          tags: { connect: tagIds.map((id) => ({ id })) },
+          tags: { connect: body.tagIds.map((id) => ({ id })) },
           options: {
             create: body.options.map((o, index) => ({
               productVariantId: o.productVariantId,
+              showImage: o.showImage,
               sortOrder: index,
             })),
           },
@@ -68,33 +104,50 @@ const productTagService = {
               sku: s.sku,
               price: s.price,
               compareAtPrice: s.compareAtPrice ?? null,
-              stock: s.stock,
+              stock: s.initialStock,
               status: s.status,
               weightGrams: s.weightGrams ?? null,
               lengthCm: s.lengthCm ?? null,
               widthCm: s.widthCm ?? null,
               heightCm: s.heightCm ?? null,
-              values: { create: s.optionValueIds.map((variantId) => ({ variantId })) },
+              values: { create: s.variantIds.map((variantId) => ({ variantId })) },
             })),
           },
           images: {
-            create: body.images.map((img, index) => ({
+            create: body.images.map((img) => ({
               url: img.url,
               alt: img.alt ?? null,
-              sortOrder: index,
-              variantId: img.optionValueId ?? null,
+              sortOrder: img.sortOrder,
             })),
           },
         },
-        include: {
-          category: { select: { id: true, name: true } },
-          tags: { select: { id: true, name: true } },
-          options: { orderBy: { sortOrder: "asc" } },
-          skus: { include: { values: { select: { variantId: true } } } },
-          images: { orderBy: { sortOrder: "asc" } },
-        },
+        select: { id: true }
+      })
+
+      for (const g of groups) {
+        await tx.productImageGroup.create({
+          data: {
+            productId: created.id,
+            values: { create: g.variantIds.map((variantId) => ({ variantId })) },
+            images: {
+              create: g.images.map((img) => ({
+                productId: created.id,
+                url: img.url,
+                alt: img.alt ?? null,
+                sortOrder: img.sortOrder,
+              })),
+            },
+          },
+        })
+      }
+
+      return tx.product.findUniqueOrThrow({
+        where: { id: created.id },
+        include: productInclude,
       })
     })
+
+    return toProductResponse(product)
   },
   getAll: async () => { },
   getById: async () => { },

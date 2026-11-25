@@ -30,6 +30,7 @@ export const DEFAULT_VALUES: ProductFormValues = {
   tags: [],
   images: [],
   options: [],
+  imageGroups: [],
   // สินค้าที่ไม่มีตัวเลือกมี SKU เดียว (key ของชุดค่าว่างคือ "")
   skus: [
     {

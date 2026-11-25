@@ -19,6 +19,7 @@ const productOptionSchema = z
     name: z.string(),
     variants: z.array(variantValueSchema),
     selectedVariantIds: z.array(z.string()).min(1, "เลือกอย่างน้อย 1 ค่า"),
+    showImage: z.boolean(),
   })
   .superRefine((o, ctx) => {
     const available = new Set(o.variants.map((v) => v.id))
@@ -29,6 +30,16 @@ const productOptionSchema = z
       ctx.addIssue({ code: "custom", path: ["selectedVariantIds"], message: "เลือกค่าซ้ำ" })
     }
   })
+
+export const imageSchema = z.object({
+  path: z.string().min(1),
+  url: z.string(),
+})
+
+export const imageGroupSchema = z.object({
+  variantIds: z.array(z.string()),
+  images: z.array(imageSchema).max(5, "อัปโหลดได้ไม่เกิน 5 รูป"),
+})
 
 const skuSchema = z
   .object({
@@ -63,6 +74,7 @@ export const productSchema = z
       .array(z.object({ url: z.string(), path: z.string() }))
       .max(MAX_IMAGES, `อัปโหลดได้ไม่เกิน ${MAX_IMAGES} รูป`),
     options: z.array(productOptionSchema).max(5, "เลือกได้ไม่เกิน 5 ตัวเลือก"),
+    imageGroups: z.array(imageGroupSchema),
     skus: z.array(skuSchema).min(1, "ต้องมีอย่างน้อย 1 SKU"),
   })
   .superRefine((v, ctx) => {
@@ -106,6 +118,8 @@ export const productSchema = z
 
 export type ProductFormValues = z.infer<typeof productSchema>
 export type ProductOption = ProductFormValues["options"][number]
+export type ProductImage = z.infer<typeof imageSchema>
+export type ImageGroup = z.infer<typeof imageGroupSchema>
 export type SkuRow = ProductFormValues["skus"][number]
 
 export type ProductVariantOption = {

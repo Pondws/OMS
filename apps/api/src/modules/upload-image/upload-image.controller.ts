@@ -1,8 +1,8 @@
-import { asyncHandler } from "../../middlewares/async-handler"
+import { Request, Response } from "express"
 import uploadImageSchema from "./upload-image.schema"
 import { uploadImageService } from "./upload-image.service"
 
-export const uploadImageController = asyncHandler(async (req, res) => {
+export const uploadImageController = async (req: Request, res: Response) => {
   const { folder } = uploadImageSchema.body.parse(req.body)
 
   const files = req.files as Express.Multer.File[]
@@ -13,4 +13,4 @@ export const uploadImageController = asyncHandler(async (req, res) => {
 
   const images = await uploadImageService(files, folder)
   res.json({ images })
-})
+}
