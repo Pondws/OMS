@@ -73,7 +73,7 @@ export const assertReferences = async (body: ProductBody) => {
   }
 }
 
-const productTagService = {
+const productService = {
   create: async (body: ProductBody) => {
     await assertReferences(body)
 
@@ -156,4 +156,4 @@ const productTagService = {
   delete: async () => { },
 }
 
-export default productTagService
+export default productService

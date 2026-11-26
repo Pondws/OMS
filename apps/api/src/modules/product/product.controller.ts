@@ -1,7 +1,7 @@
 import { Request, Response } from "express"
 import productService from "./product.service"
-import { ProductTagParams } from "./product.type"
-import { getSearchOptionsSchema } from "../../shard/schemas/get-search-options"
+// import { ProductTagParams } from "./product.type"
+// import { getSearchOptionsSchema } from "../../shard/schemas/get-search-options"
 
 const productController = {
   create: async (req: Request, res: Response) => {

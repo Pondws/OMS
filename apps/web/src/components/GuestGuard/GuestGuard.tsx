@@ -9,8 +9,6 @@ export function GuestGuard({ children }: { children: ReactNode }) {
   const { data } = useMe()
   const isLoggedIn = !!data?.user
 
-  console.log("data", data)
-
   useEffect(() => {
     if (isLoggedIn) router.replace("/dashboard")
   }, [isLoggedIn, router])

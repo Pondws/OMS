@@ -12,7 +12,7 @@ import {
 interface HeaderProps {
   routes?: RoutesProps[]
   title: string
-  actionButton: ReactNode
+  actionButton?: ReactNode
   filterBox?: ReactNode
 }
 

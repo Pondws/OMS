@@ -1,16 +1,19 @@
 import {
   Box,
+  Boxes,
+  // History,
   Layers,
   LayoutGrid,
   Package,
   Tag,
   Puzzle,
-  User
+  User,
+  Warehouse,
 } from "lucide-react"
 
 export const LAYOUT_OPTIONS = [
   {
-    label: '',
+    label: "",
     menus: [
       {
         id: "dashboard",
@@ -19,7 +22,7 @@ export const LAYOUT_OPTIONS = [
         icon: LayoutGrid,
       },
       {
-        id: "product",
+        id: "product-group",
         title: "สินค้า",
         icon: Box,
         items: [
@@ -29,7 +32,7 @@ export const LAYOUT_OPTIONS = [
             url: "/product",
             icon: Package,
           },
-              {
+          {
             id: "product-variant",
             title: "ตัวเลือกสินค้า",
             url: "/product-variant",
@@ -47,39 +50,33 @@ export const LAYOUT_OPTIONS = [
             url: "/product-category",
             icon: Layers,
           },
-        ]
+        ],
       },
-            {
+      {
+        id: "inventory-group",
+        title: "คลังสินค้า",
+        icon: Warehouse,
+        items: [
+          {
+            id: "inventory",
+            title: "สต็อกสินค้า",
+            url: "/inventory",
+            icon: Boxes,
+          },
+          // {
+          //   id: "inventory-movement",
+          //   title: "ประวัติสต็อก",
+          //   url: "/inventory/movement",
+          //   icon: History,
+          // },
+        ],
+      },
+      {
         id: "user",
         title: "ผู้ใช้งาน",
         url: "/user",
         icon: User,
       },
-      // {
-      //   id: "blog",
-      //   title: "Blog",
-      //   icon: Box,
-      //   items: [
-      //     {
-      //       id: "blog",
-      //       title: "Blog",
-      //       url: "/blog",
-      //       icon: Package,
-      //     },
-      //     {
-      //       id: "blog-tag",
-      //       title: "Blog Tag",
-      //       url: "/blog-tag",
-      //       icon: Tag,
-      //     },
-      //     // {
-      //     //   id: "product-category",
-      //     //   title: "Product Category",
-      //     //   url: "/product-category",
-      //     //   icon: Layers,
-      //     // },
-      //   ]
-      // },
-    ]
-  }
+    ],
+  },
 ]

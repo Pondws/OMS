@@ -9,23 +9,9 @@ type Schemas = {
 
 export const validate =
   (schemas: Schemas): RequestHandler =>
-    (req, _res, next) => {
-      if (schemas.params) {
-        req.params = schemas.params.parse(req.params) as typeof req.params
-      }
-
-      if (schemas.query) {
-        Object.defineProperty(req, "query", {
-          value: schemas.query.parse(req.query),
-          writable: true,
-          enumerable: true,
-          configurable: true,
-        })
-      }
-
-      if (schemas.body) {
-        req.body = schemas.body.parse(req.body)
-      }
-
-      next()
-    }
+  (req, res, next) => {
+    if (schemas.body) req.body = schemas.body.parse(req.body);
+    if (schemas.query) res.locals.query = schemas.query.parse(req.query);
+    if (schemas.params) res.locals.params = schemas.params.parse(req.params);
+    next()
+  };

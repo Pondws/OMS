@@ -50,8 +50,9 @@ interface DataTableProps<TData extends RowData> {
 
   onPageChange: (page: number, limit: number) => void
   onLimitChange: (limit: number) => void
+  onRowClick?: (row: TData) => void
+  isRowActive?: (row: TData) => boolean
 
-  /** ตัวเลือกจำนวนแถวต่อหน้า */
   limitOptions?: number[]
   isLoading?: boolean
   emptyText?: string
@@ -69,6 +70,8 @@ export function DataTable<TData extends RowData>({
   limitOptions = DEFAULT_LIMIT_OPTIONS,
   isLoading = false,
   emptyText = "ไม่พบข้อมูล",
+  onRowClick,
+  isRowActive,
 }: DataTableProps<TData>) {
   const table = useTable({ features, data, columns })
 
@@ -118,8 +121,23 @@ export function DataTable<TData extends RowData>({
               rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() ? "selected" : undefined}
-                  className={cn(isLoading && "opacity-60")}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (e) => {
+                        if (e.target !== e.currentTarget) return
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault()
+                          onRowClick(row.original)
+                        }
+                      }
+                      : undefined
+                  }
+                  className={cn(
+                    isLoading && "opacity-60",
+                    onRowClick && "cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring",
+                  )}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
