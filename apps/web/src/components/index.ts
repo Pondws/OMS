@@ -18,3 +18,5 @@ export * from './ProductVariant'
 export * from './ProductCategory'
 export * from './Product'
 
+export * from './Inventory'
+
