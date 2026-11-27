@@ -17,20 +17,22 @@ export const inventorySelect = {
   stockMovements: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
 } satisfies Prisma.ProductSkuSelect
 
+export const movementSelect = {
+  id: true,
+  delta: true,
+  stockAfter: true,
+  reason: true,
+  note: true,
+  createdById: true,
+  createdAt: true,
+} satisfies Prisma.StockMovementSelect
+
 export const inventoryDetailSelect = {
   ...inventorySelect,
   stockMovements: {
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: 3,
-    select: {
-      id: true,
-      delta: true,
-      stockAfter: true,
-      reason: true,
-      note: true,
-      createdById: true,
-      createdAt: true,
-    },
+    select: movementSelect,
   },
   _count: { select: { stockMovements: true } },
 } satisfies Prisma.ProductSkuSelect

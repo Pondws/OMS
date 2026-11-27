@@ -10,7 +10,7 @@ export type Role =
 export type AuthUser = {
   id: string
   email: string
-  role: Role
+  // role: Role
 }
 
 export type RegisterInput =
