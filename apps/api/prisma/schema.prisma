@@ -29,6 +29,15 @@ enum Status {
   INACTIVE
 }
 
+enum StockMovementReason {
+  INITIAL // สต็อกเริ่มต้นตอนสร้าง SKU (ระบบบันทึกเอง)
+  RESTOCK // รับเข้า
+  SALE // ขาย (ระบบบันทึกเองตอนมี order)
+  RETURN // ลูกค้าคืน (ระบบบันทึกเอง)
+  DAMAGED // เสียหาย / สูญหาย
+  COUNT_CORRECTION // ปรับให้ตรงกับที่นับได้จริง
+}
+
 model User {
   id            String    @id @default(uuid()) @db.Uuid
   name          String
@@ -131,8 +140,8 @@ model Variant {
   colorHex  String?
   sortOrder Int     @default(0)
 
-  productVariantId String            @db.Uuid
-  productVariant   ProductVariant    @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  productVariantId String                   @db.Uuid
+  productVariant   ProductVariant           @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
   skuValues        ProductSkuValue[]
   imageGroupValues ProductImageGroupValue[]
 
@@ -177,8 +186,8 @@ model ProductOption {
 }
 
 model ProductSku {
-  id        String   @id @default(uuid()) @db.Uuid
-  productId String   @db.Uuid
+  id        String  @id @default(uuid()) @db.Uuid
+  productId String  @db.Uuid
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   sku            String   @unique
@@ -192,7 +201,8 @@ model ProductSku {
   widthCm     Decimal? @db.Decimal(6, 1)
   heightCm    Decimal? @db.Decimal(6, 1)
 
-  values ProductSkuValue[]
+  values        ProductSkuValue[]
+  stockMovements StockMovement[]
 }
 
 model ProductSkuValue {
@@ -211,9 +221,9 @@ model ProductImage {
   alt       String?
   sortOrder Int     @default(0)
 
-  productId String   @db.Uuid
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  groupId   String?            @db.Uuid  // null = รูปหลัก (แทน variantId เดิม)
+  productId String             @db.Uuid
+  product   Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  groupId   String?            @db.Uuid // null = รูปหลัก (แทน variantId เดิม)
   group     ProductImageGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -221,7 +231,9 @@ model ProductImage {
   @@unique([productId, groupId, sortOrder])
 }
 
-/** กลุ่มรูป เช่น "สีดำ" หรือ "ดำ + ลายทาง" */
+/**
+ * กลุ่มรูป เช่น "สีดำ" หรือ "ดำ + ลายทาง"
+ */
 model ProductImageGroup {
   id String @id @default(uuid()) @db.Uuid
 
@@ -234,7 +246,9 @@ model ProductImageGroup {
   @@index([productId])
 }
 
-/** ค่าของกลุ่ม เช่น กลุ่ม "ดำ + ลายทาง" มี 2 แถว */
+/**
+ * ค่าของกลุ่ม เช่น กลุ่ม "ดำ + ลายทาง" มี 2 แถว
+ */
 model ProductImageGroupValue {
   groupId   String            @db.Uuid
   group     ProductImageGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -243,4 +257,21 @@ model ProductImageGroupValue {
 
   @@id([groupId, variantId])
   @@index([variantId])
+}
+
+model StockMovement {
+  id    String     @id @default(uuid()) @db.Uuid
+  skuId String     @db.Uuid
+  sku   ProductSku @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  delta      Int
+  stockAfter Int
+  reason     StockMovementReason
+  note       String?
+
+  createdById String?  @db.Uuid
+  createdAt   DateTime @default(now())
+
+  @@index([skuId, createdAt])
+  @@index([createdAt])
 }

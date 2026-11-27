@@ -1,26 +1,7 @@
-import { Prisma } from "../../../generated/prisma/client"
 import { prisma } from "../../lib/prisma"
 import { getPagination, getPaginationMeta } from "../../utils/pagination"
 import { GetInventory, LOW_STOCK_THRESHOLD } from "./inventory.schema"
-
-const inventorySelect = {
-  id: true,
-  sku: true,
-  stock: true,
-  status: true,
-  product: {
-    select: {
-      id: true,
-      name: true,
-      images: { where: { groupId: null }, orderBy: { sortOrder: "asc" }, take: 1, select: { url: true } },
-      options: { select: { productVariantId: true, sortOrder: true } },
-    },
-  },
-  values: { select: { variant: { select: { name: true, productVariantId: true } } } },
-  // stockMovements: { orderBy: { createdAt: "desc" }, take: 1, select: { createdAt: true } },
-} satisfies Prisma.ProductSkuSelect
-
-type InventoryRow = Prisma.ProductSkuGetPayload<{ select: typeof inventorySelect }>
+import { inventoryDetailSelect, InventoryRow, inventorySelect } from "./inventory.select"
 
 const stockStatusOf = (stock: number) =>
   stock === 0 ? "OUT_OF_STOCK" : stock <= LOW_STOCK_THRESHOLD ? "LOW_STOCK" : "IN_STOCK"
@@ -89,6 +70,23 @@ export const inventoryService = {
     return {
       data: data.map(toInventoryItem),
       meta: getPaginationMeta(query.page, query.limit, total)
+    }
+  },
+  getById: async (id: string) => {
+    const data = await prisma.productSku.findFirst({
+      where: {
+        id,
+        product: { deletedAt: null }
+      },
+      select: inventoryDetailSelect
+    })
+
+    if (!data) throw new Error("ไม่พบ SKU นี้")
+      
+    return {
+      ...toInventoryItem(data),
+      recentMovement: data.stockMovements,
+      movementCount: data._count.stockMovements,
     }
   }
 }
