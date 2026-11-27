@@ -16,11 +16,11 @@ export const authenticate = async (
       return res.status(401).json({ message: "Unauthorized" })
     }
 
-    // req.user = {
-    //   id: session.user.id,
-    //   email: session.user.email,
-    //   role: (session.user as { role?: string }).role ?? "user",
-    // }
+    req.user = {
+      id: session.user.id,
+      email: session.user.email,
+      // role: (session.user as { role?: string }).role ?? "user",
+    }
 
     next()
   } catch (error) {

@@ -6,3 +6,4 @@ export const inventoryRouter = Router()
 
 inventoryRouter.get( "/", authenticate, inventoryController.getAll)
 inventoryRouter.get("/:id", authenticate, inventoryController.getById)
+inventoryRouter.post("/adjustments", authenticate, inventoryController.adjust)
